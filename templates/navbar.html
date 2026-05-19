@@ -26,6 +26,12 @@
                         <li><a class="dropdown-item" href="{% url 'budgets' %}">Budget</a></li>
                     </ul>
                 </li>
+                <li class="nav-item">
+                    <form method="post" action="{% url 'sair' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button class="nav-link btn btn-link" type="submit">Sair</button>
+                    </form>
+                </li>
             </ul>
         </div>
     </div>

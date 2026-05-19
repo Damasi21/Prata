@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
@@ -13,7 +14,31 @@ def criar_categoria_filha(nome, tipo=Categoria.DESPESA, pai_nome='Grupo'):
     return Categoria.objects.create(nome=nome, tipo=tipo, pai=pai)
 
 
+class LoginTests(TestCase):
+    def test_index_redireciona_anonimo_para_login(self):
+        resposta = self.client.get(reverse('index'))
+
+        self.assertRedirects(resposta, f'{reverse("tela_login")}?next={reverse("index")}')
+
+    def test_login_com_credenciais_validas_abre_index(self):
+        User.objects.create_user(username='usuario', password='senha-segura')
+
+        resposta = self.client.post(
+            reverse('tela_login'),
+            {
+                'username': 'usuario',
+                'password': 'senha-segura',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('index'))
+
+
 class CategoriaTests(TestCase):
+    def setUp(self):
+        User.objects.create_user(username='usuario', password='senha-segura')
+        self.client.login(username='usuario', password='senha-segura')
+
     def test_categoria_filha_exibe_caminho_com_pai(self):
         categoria = criar_categoria_filha('Combustivel', pai_nome='Veiculos')
 
@@ -90,6 +115,10 @@ class CategoriaTests(TestCase):
 
 
 class RecorrenciaContaTests(TestCase):
+    def setUp(self):
+        User.objects.create_user(username='usuario', password='senha-segura')
+        self.client.login(username='usuario', password='senha-segura')
+
     def test_datas_recorrencia_mensal_respeitam_ultimo_dia_do_mes(self):
         datas = list(_datas_recorrencia(date(2026, 1, 31), RecorrenciaConta.MENSAL, 3))
 
@@ -213,6 +242,10 @@ class RecorrenciaContaTests(TestCase):
 
 
 class BudgetTests(TestCase):
+    def setUp(self):
+        User.objects.create_user(username='usuario', password='senha-segura')
+        self.client.login(username='usuario', password='senha-segura')
+
     def test_budgets_separa_despesas_receitas_e_calcula_totais(self):
         despesa = criar_categoria_filha('Telefone', pai_nome='Moradia')
         receita = criar_categoria_filha('Salario', tipo=Categoria.RECEITA, pai_nome='Trabalho')

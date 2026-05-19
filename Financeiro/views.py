@@ -5,6 +5,8 @@ from decimal import Decimal, InvalidOperation
 from types import SimpleNamespace
 
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import ProtectedError
@@ -218,6 +220,35 @@ def _criar_preview_importacao(request, conta, arquivo, lancamentos, origem):
     request.session.pop('ofx_preview', None)
 
 
+@require_http_methods(['GET', 'POST'])
+def tela_login(request):
+    if request.user.is_authenticated:
+        return redirect('index')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        next_url = request.POST.get('next') or reverse('index')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            if not request.POST.get('remember'):
+                request.session.set_expiry(0)
+            return redirect(next_url)
+
+        messages.error(request, 'Usuario ou senha invalidos.')
+
+    return render(request, 'financeiro/login.html')
+
+
+@require_http_methods(['POST'])
+def sair(request):
+    logout(request)
+    return redirect('tela_login')
+
+
+@login_required
 def index(request):
     mes = _mes_atual()
     budgets = Budget.objects.filter(mes=mes).select_related('categoria')
@@ -244,6 +275,7 @@ def index(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def contas_bancarias(request):
     form = ContaBancariaForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -254,6 +286,7 @@ def contas_bancarias(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def categorias(request):
     categoria_em_edicao = None
     categoria_id = request.POST.get('categoria_id') or request.GET.get('editar')
@@ -292,6 +325,7 @@ def categorias(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def eventos(request):
     form = EventoForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -302,6 +336,7 @@ def eventos(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def importar_ofx(request):
     form = ImportacaoOFXForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
@@ -332,6 +367,7 @@ def importar_ofx(request):
 
 
 @require_http_methods(['POST'])
+@login_required
 def excluir_lancamento(request, lancamento_id):
     lancamento = get_object_or_404(Lancamento, id=lancamento_id)
     descricao = lancamento.descricao
@@ -348,6 +384,7 @@ def excluir_lancamento(request, lancamento_id):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def categorizar_ofx_preview(request):
     preview = request.session.get('importacao_preview') or request.session.get('ofx_preview')
     if not preview:
@@ -530,6 +567,7 @@ def categorizar_ofx_preview(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def categorizar_importacao(request, importacao_id):
     importacao = get_object_or_404(Importacao, id=importacao_id)
     lancamentos = importacao.lancamentos.prefetch_related('rateios__categoria').all()
@@ -581,6 +619,7 @@ def categorizar_importacao(request, importacao_id):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def budgets(request):
     mes = _mes_budget(request)
     categorias = _categorias_operacionais().order_by('tipo', 'pai__nome', 'nome')
@@ -641,6 +680,7 @@ def budgets(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def contas_pagar_receber(request):
     conta_em_edicao = None
     conta_id = request.POST.get('conta_id') or request.GET.get('editar')
@@ -707,6 +747,7 @@ def contas_pagar_receber(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def importar_excel(request):
     form = ImportacaoCartaoForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
@@ -726,9 +767,11 @@ def importar_excel(request):
     return render(request, 'financeiro/importar_excel.html', {'form': form})
 
 
+@login_required
 def fluxo_de_caixa(request):
     return render(request, 'financeiro/fluxo_de_caixa.html')
 
 
+@login_required
 def relatorios_bi(request):
     return render(request, 'financeiro/relatorios_bi.html')

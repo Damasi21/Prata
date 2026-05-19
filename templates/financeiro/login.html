@@ -1,0 +1,74 @@
+{% load static %}
+
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - Prata</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <main class="login-shell">
+        <section class="login-card" aria-labelledby="login-title">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">
+                    <span>P</span>
+                </div>
+                <h1 class="member-title" id="login-title">Prata</h1>
+                <p class="member-subtitle">Acesso financeiro</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="messages">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form class="login-form" method="post" action="{% url 'tela_login' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+                <label class="input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                    <input type="text" name="username" autocomplete="username" placeholder="Usuario" required>
+                </label>
+
+                <label class="input-wrap password-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                            <path d="M7 11V8a5 5 0 0 1 10 0v3"></path>
+                        </svg>
+                    </span>
+                    <input id="passwordInput" type="password" name="password" autocomplete="current-password" placeholder="Senha" required>
+                    <button class="password-toggle" type="button" id="passwordToggle" aria-label="Mostrar senha">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </label>
+
+                <div class="form-row">
+                    <label class="remember">
+                        <input type="checkbox" name="remember">
+                        <span>Lembrar-me</span>
+                    </label>
+                </div>
+
+                <button class="login-button" type="submit">Entrar</button>
+            </form>
+        </section>
+    </main>
+    <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>
