@@ -97,11 +97,10 @@ body {
     width: 108px;
 }
 
-.brand-mark span {
-    color: var(--gold-light);
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1;
+.brand-mark img {
+    height: 82%;
+    object-fit: contain;
+    width: 82%;
 }
 
 .member-title {
@@ -133,9 +132,30 @@ body {
     text-align: center;
 }
 
+.info-message {
+    background: rgba(215, 167, 63, 0.16);
+    border-color: rgba(215, 167, 63, 0.32);
+    color: var(--white);
+}
+
+.errorlist {
+    color: #ffe5e5;
+    font-size: 0.72rem;
+    list-style: none;
+    margin: -8px 12px 0;
+}
+
 .login-form {
     display: grid;
     gap: 17px;
+}
+
+.register-shell {
+    min-height: 760px;
+}
+
+.register-form {
+    gap: 13px;
 }
 
 .input-wrap {

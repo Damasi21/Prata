@@ -1,0 +1,117 @@
+{% load static %}
+
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cadastro - Prata</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <main class="login-shell register-shell">
+        <section class="login-card" aria-labelledby="register-title">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">
+                    <img src="{{ MEDIA_URL }}md21.png" alt="">
+                </div>
+                <h1 class="member-title" id="register-title">Criar Conta</h1>
+                <p class="member-subtitle">Prata financeiro</p>
+            </div>
+
+            {% if primeiro_usuario %}
+                <div class="messages info-message">Este sera o primeiro usuario e tera acesso de administrador.</div>
+            {% endif %}
+
+            {% if form.errors %}
+                <div class="messages">
+                    Corrija os campos destacados para concluir o cadastro.
+                </div>
+            {% endif %}
+
+            <form class="login-form register-form" method="post" action="{% url 'cadastro_usuario' %}">
+                {% csrf_token %}
+
+                <label class="input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                    <input type="text" name="username" autocomplete="username" placeholder="Usuario" value="{{ form.username.value|default:'' }}" required>
+                </label>
+                {{ form.username.errors }}
+
+                <label class="input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        </svg>
+                    </span>
+                    <input type="text" name="first_name" autocomplete="given-name" placeholder="Nome" value="{{ form.first_name.value|default:'' }}">
+                </label>
+
+                <label class="input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        </svg>
+                    </span>
+                    <input type="text" name="last_name" autocomplete="family-name" placeholder="Sobrenome" value="{{ form.last_name.value|default:'' }}">
+                </label>
+
+                <label class="input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                            <path d="m3 7 9 6 9-6"></path>
+                        </svg>
+                    </span>
+                    <input type="email" name="email" autocomplete="email" placeholder="E-mail" value="{{ form.email.value|default:'' }}">
+                </label>
+                {{ form.email.errors }}
+
+                <label class="input-wrap password-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                            <path d="M7 11V8a5 5 0 0 1 10 0v3"></path>
+                        </svg>
+                    </span>
+                    <input id="passwordInput" type="password" name="password1" autocomplete="new-password" placeholder="Senha" required>
+                    <button class="password-toggle" type="button" id="passwordToggle" aria-label="Mostrar senha">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </label>
+                {{ form.password1.errors }}
+
+                <label class="input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6 9 17l-5-5"></path>
+                        </svg>
+                    </span>
+                    <input type="password" name="password2" autocomplete="new-password" placeholder="Confirmar senha" required>
+                </label>
+                {{ form.password2.errors }}
+
+                <button class="login-button" type="submit">Cadastrar</button>
+            </form>
+
+            <div class="signup">
+                <a class="create-link" href="{% url 'tela_login' %}">Voltar ao login</a>
+            </div>
+        </section>
+    </main>
+    <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>

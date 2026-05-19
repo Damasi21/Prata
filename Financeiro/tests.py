@@ -33,6 +33,31 @@ class LoginTests(TestCase):
 
         self.assertRedirects(resposta, reverse('index'))
 
+    def test_cadastro_primeiro_usuario_cria_admin_e_autentica(self):
+        resposta = self.client.post(
+            reverse('cadastro_usuario'),
+            {
+                'username': 'admin',
+                'first_name': 'Admin',
+                'last_name': 'Prata',
+                'email': 'admin@example.com',
+                'password1': 'SenhaForte123!',
+                'password2': 'SenhaForte123!',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('index'))
+        usuario = User.objects.get(username='admin')
+        self.assertTrue(usuario.is_staff)
+        self.assertTrue(usuario.is_superuser)
+
+    def test_cadastro_publico_bloqueado_quando_ja_existe_usuario(self):
+        User.objects.create_user(username='usuario', password='senha-segura')
+
+        resposta = self.client.get(reverse('cadastro_usuario'))
+
+        self.assertRedirects(resposta, reverse('tela_login'))
+
 
 class CategoriaTests(TestCase):
     def setUp(self):

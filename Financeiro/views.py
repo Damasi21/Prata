@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import ProtectedError
@@ -15,7 +16,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
 from .cartao import parse_cartao_csv
-from .forms import CategoriaForm, ContaBancariaForm, ContaPagarReceberForm, EventoForm, ImportacaoCartaoForm, ImportacaoOFXForm
+from .forms import CategoriaForm, ContaBancariaForm, ContaPagarReceberForm, EventoForm, ImportacaoCartaoForm, ImportacaoOFXForm, UsuarioCadastroForm
 from .models import Budget, Categoria, ContaBancaria, ContaPagarReceber, Evento, Importacao, Lancamento, RateioLancamento, RecorrenciaConta
 from .ofx import parse_ofx
 
@@ -239,7 +240,40 @@ def tela_login(request):
 
         messages.error(request, 'Usuario ou senha invalidos.')
 
-    return render(request, 'financeiro/login.html')
+    return render(
+        request,
+        'financeiro/login.html',
+        {'pode_criar_primeiro_usuario': not User.objects.exists()},
+    )
+
+
+@require_http_methods(['GET', 'POST'])
+def cadastro_usuario(request):
+    primeiro_usuario = not User.objects.exists()
+    usuario_admin = request.user.is_authenticated and request.user.is_staff
+
+    if not primeiro_usuario and not usuario_admin:
+        messages.error(request, 'Cadastro disponivel apenas para o primeiro usuario ou administradores.')
+        return redirect('tela_login')
+
+    form = UsuarioCadastroForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        usuario = form.save(commit=False)
+        if primeiro_usuario:
+            usuario.is_staff = True
+            usuario.is_superuser = True
+        usuario.save()
+        messages.success(request, 'Usuario cadastrado com sucesso.')
+        if primeiro_usuario:
+            login(request, usuario)
+            return redirect('index')
+        return redirect('tela_login')
+
+    return render(
+        request,
+        'financeiro/cadastro_usuario.html',
+        {'form': form, 'primeiro_usuario': primeiro_usuario},
+    )
 
 
 @require_http_methods(['POST'])

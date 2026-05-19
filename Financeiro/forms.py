@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 from .models import Budget, Categoria, ContaBancaria, ContaPagarReceber, Evento, RecorrenciaConta
 
@@ -17,6 +19,18 @@ class ContaBancariaForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = ContaBancaria
         fields = ['nome', 'banco', 'agencia', 'numero', 'ativa']
+
+
+class UsuarioCadastroForm(BootstrapFormMixin, UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        labels = {
+            'username': 'Usuario',
+            'first_name': 'Nome',
+            'last_name': 'Sobrenome',
+            'email': 'E-mail',
+        }
 
 
 class CategoriaForm(BootstrapFormMixin, forms.ModelForm):

@@ -16,7 +16,7 @@
         <section class="login-card" aria-labelledby="login-title">
             <div class="brand">
                 <div class="brand-mark" aria-hidden="true">
-                    <span>P</span>
+                    <img src="{{ MEDIA_URL }}md21.png" alt="">
                 </div>
                 <h1 class="member-title" id="login-title">Prata</h1>
                 <p class="member-subtitle">Acesso financeiro</p>
@@ -67,6 +67,15 @@
 
                 <button class="login-button" type="submit">Entrar</button>
             </form>
+
+            <div class="signup">
+                {% if pode_criar_primeiro_usuario %}
+                    <p>Nao tem usuario cadastrado?</p>
+                    <a class="create-link" href="{% url 'cadastro_usuario' %}">Criar conta</a>
+                {% else %}
+                    <p>Acesso restrito aos usuarios cadastrados.</p>
+                {% endif %}
+            </div>
         </section>
     </main>
     <script src="{% static 'js/login.js' %}"></script>
