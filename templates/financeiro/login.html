@@ -69,12 +69,8 @@
             </form>
 
             <div class="signup">
-                {% if pode_criar_primeiro_usuario %}
-                    <p>Nao tem usuario cadastrado?</p>
-                    <a class="create-link" href="{% url 'cadastro_usuario' %}">Criar conta</a>
-                {% else %}
-                    <p>Acesso restrito aos usuarios cadastrados.</p>
-                {% endif %}
+                <p>Nao tem usuario cadastrado?</p>
+                <a class="create-link" href="{% url 'cadastro_usuario' %}">Criar conta</a>
             </div>
         </section>
     </main>

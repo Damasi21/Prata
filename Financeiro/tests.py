@@ -51,12 +51,26 @@ class LoginTests(TestCase):
         self.assertTrue(usuario.is_staff)
         self.assertTrue(usuario.is_superuser)
 
-    def test_cadastro_publico_bloqueado_quando_ja_existe_usuario(self):
+    def test_cadastro_publico_cria_usuario_comum_quando_ja_existe_usuario(self):
         User.objects.create_user(username='usuario', password='senha-segura')
 
-        resposta = self.client.get(reverse('cadastro_usuario'))
+        resposta = self.client.post(
+            reverse('cadastro_usuario'),
+            {
+                'username': 'novo',
+                'first_name': 'Novo',
+                'last_name': 'Usuario',
+                'email': 'novo@example.com',
+                'password1': 'SenhaForte123!',
+                'password2': 'SenhaForte123!',
+            },
+        )
 
-        self.assertRedirects(resposta, reverse('tela_login'))
+        self.assertRedirects(resposta, reverse('index'))
+        usuario = User.objects.get(username='novo')
+        self.assertTrue(usuario.is_active)
+        self.assertFalse(usuario.is_staff)
+        self.assertFalse(usuario.is_superuser)
 
 
 class CategoriaTests(TestCase):

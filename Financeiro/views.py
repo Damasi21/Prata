@@ -250,11 +250,6 @@ def tela_login(request):
 @require_http_methods(['GET', 'POST'])
 def cadastro_usuario(request):
     primeiro_usuario = not User.objects.exists()
-    usuario_admin = request.user.is_authenticated and request.user.is_staff
-
-    if not primeiro_usuario and not usuario_admin:
-        messages.error(request, 'Cadastro disponivel apenas para o primeiro usuario ou administradores.')
-        return redirect('tela_login')
 
     form = UsuarioCadastroForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -264,10 +259,8 @@ def cadastro_usuario(request):
             usuario.is_superuser = True
         usuario.save()
         messages.success(request, 'Usuario cadastrado com sucesso.')
-        if primeiro_usuario:
-            login(request, usuario)
-            return redirect('index')
-        return redirect('tela_login')
+        login(request, usuario)
+        return redirect('index')
 
     return render(
         request,
