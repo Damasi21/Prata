@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Importar CSV do cartao - Prata{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Importar CSV do cartao</h1>
+<p class="text-secondary">Use um arquivo com as colunas data, descricao e valor, separadas por virgula.</p>
+<form method="post" enctype="multipart/form-data" class="card card-body col-lg-6">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Ler fatura</button>
+</form>
+{% endblock %}

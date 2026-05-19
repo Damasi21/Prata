@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Importar OFX - Prata{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">Extrato</h1>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <form method="post" enctype="multipart/form-data" class="card card-body">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Ler extrato</button>
+        </form>
+    </div>
+    <div class="col-lg-7">
+        <form method="get" class="card card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label" for="data_inicio">Data inicial</label>
+                    <input class="form-control" id="data_inicio" name="data_inicio" type="date" value="{{ data_inicio|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label" for="data_fim">Data final</label>
+                    <input class="form-control" id="data_fim" name="data_fim" type="date" value="{{ data_fim|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Descricao</th>
+                <th>Origem</th>
+                <th>Conta</th>
+                <th>Evento</th>
+                <th>Categoria</th>
+                <th class="text-end">Valor</th>
+                <th class="text-end">Acoes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lancamento in lancamentos %}
+                <tr>
+                    <td>{{ lancamento.data|date:'d/m/Y' }}</td>
+                    <td>{{ lancamento.descricao }}</td>
+                    <td>
+                        {% if lancamento.importacao %}
+                            {{ lancamento.importacao.get_origem_display }}
+                        {% else %}
+                            Manual
+                        {% endif %}
+                    </td>
+                    <td>{{ lancamento.conta }}</td>
+                    <td>{{ lancamento.evento.nome|default:'-' }}</td>
+                    <td>
+                        {% for rateio in lancamento.rateios.all %}
+                            {{ rateio.categoria.nome }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                    <td class="text-end {% if lancamento.valor < 0 %}text-danger{% else %}text-success{% endif %}">
+                        R$ {{ lancamento.valor }}
+                    </td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'excluir_lancamento' lancamento.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button
+                                class="btn btn-sm btn-outline-danger"
+                                type="submit"
+                                onclick="return confirm('Excluir este lancamento?');"
+                            >
+                                Excluir
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8" class="text-secondary">Nenhum lancamento encontrado para o periodo selecionado.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

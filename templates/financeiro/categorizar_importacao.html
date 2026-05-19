@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorizar OFX - Prata{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="h3 mb-1">Categorizar lancamentos</h1>
+        <p class="text-secondary mb-0">
+            {% if importacao.origem %}{{ importacao.origem|upper }} - {% endif %}{{ importacao.conta }} - {{ importacao.total_lancamentos }} lancamentos
+            {% if preview %}lidos, ainda nao salvos{% else %}importados{% endif %}
+        </p>
+    </div>
+</div>
+
+{% if preview %}
+    <div class="alert alert-warning">
+        Estes lancamentos ainda nao foram gravados no banco. Apenas lancamentos com categoria serao salvos.
+    </div>
+{% endif %}
+
+<form method="post" data-allocation-form data-allow-partial-save="{% if preview %}true{% else %}false{% endif %}">
+    {% csrf_token %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descricao</th>
+                    <th>Evento</th>
+                    <th class="text-end">Valor</th>
+                    {% if preview %}<th>Conciliacao</th>{% endif %}
+                    <th class="rateio-col">Rateio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lancamento in lancamentos %}
+                    <tr class="{% if lancamento.ja_gravado %}table-success{% endif %}">
+                        <td>{{ lancamento.data|date:'d/m/Y' }}</td>
+                        <td>
+                            {{ lancamento.descricao }}
+                            {% if lancamento.ja_gravado %}
+                                <span class="badge text-bg-success ms-2">Ja gravado</span>
+                            {% endif %}
+                            {% if preview and lancamento.tem_sugestao_categoria %}
+                                <span class="badge text-bg-info ms-2">Categoria sugerida</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <select class="form-select" name="evento-{{ lancamento.id }}">
+                                <option value="">Sem evento</option>
+                                {% for evento in eventos %}
+                                    <option value="{{ evento.id }}" {% if evento.id == lancamento.evento_id %}selected{% endif %}>{{ evento.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td class="text-end {% if lancamento.valor < 0 %}text-danger{% else %}text-success{% endif %}">
+                            R$ {{ lancamento.valor }}
+                        </td>
+                        {% if preview %}
+                            <td>
+                                {% if lancamento.sugestoes_conciliacao %}
+                                    <div class="conciliation-options">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="conciliar-{{ lancamento.id }}" id="conciliar-{{ lancamento.id }}-nao" value="" checked>
+                                            <label class="form-check-label" for="conciliar-{{ lancamento.id }}-nao">Nao conciliar</label>
+                                        </div>
+                                        {% for conta in lancamento.sugestoes_conciliacao %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="conciliar-{{ lancamento.id }}" id="conciliar-{{ lancamento.id }}-{{ conta.id }}" value="{{ conta.id }}">
+                                                <label class="form-check-label" for="conciliar-{{ lancamento.id }}-{{ conta.id }}">
+                                                    Sim: {{ conta.descricao }} - {{ conta.natureza }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-secondary">Sem sugestao</span>
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                        <td>
+                            <div class="allocation-list" data-lancamento="{{ lancamento.id }}">
+                                {% for rateio in lancamento.rateios.all %}
+                                    <div class="row g-2 mb-2 allocation-row">
+                                        <div class="{% if preview %}col-md-8{% else %}col-md-7{% endif %}">
+                                            <select class="form-select" name="alloc-{{ lancamento.id }}-categoria">
+                                                <option value="">Categoria</option>
+                                                {% for categoria in categorias %}
+                                                    <option value="{{ categoria.id }}" {% if categoria.id == rateio.categoria_id %}selected{% endif %}>{{ categoria }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="{% if preview %}col-md-4{% else %}col-md-3{% endif %}">
+                                            <input class="form-control" name="alloc-{{ lancamento.id }}-percentual" value="{{ rateio.percentual }}" placeholder="%">
+                                        </div>
+                                        {% if not preview %}
+                                            <div class="col-md-2">
+                                                <button class="btn btn-outline-danger w-100 remove-allocation" type="button">Remover</button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% empty %}
+                                    <div class="row g-2 mb-2 allocation-row">
+                                        <div class="{% if preview %}col-md-8{% else %}col-md-7{% endif %}">
+                                            <select class="form-select" name="alloc-{{ lancamento.id }}-categoria">
+                                                <option value="">Categoria</option>
+                                                {% for categoria in categorias %}
+                                                    <option value="{{ categoria.id }}">{{ categoria }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="{% if preview %}col-md-4{% else %}col-md-3{% endif %}">
+                                            <input class="form-control" name="alloc-{{ lancamento.id }}-percentual" value="100" placeholder="%">
+                                        </div>
+                                        {% if not preview %}
+                                            <div class="col-md-2">
+                                                <button class="btn btn-outline-danger w-100 remove-allocation" type="button">Remover</button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <button class="btn btn-sm btn-outline-secondary add-allocation" type="button">Adicionar categoria</button>
+                                <span class="allocation-warning d-none" role="alert">
+                                    <span class="allocation-warning-icon">!</span>
+                                    categoria e 100% obrigatorios
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="{% if preview %}6{% else %}5{% endif %}" class="text-secondary">Nenhum lancamento nesta importacao.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <button class="btn btn-primary" type="submit">
+        {% if preview %}Salvar lancamentos{% else %}Salvar rateios{% endif %}
+    </button>
+</form>
+
+{% if preview %}
+    <div class="modal fade" id="partialSaveModal" tabindex="-1" aria-labelledby="partialSaveModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="partialSaveModalLabel">Salvar parcialmente?</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Deseja salvar apenas os lancamentos categorizados? Os lancamentos sem categoria nao serao gravados.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="button" class="btn btn-primary" id="confirmPartialSave">Salvar categorizados</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

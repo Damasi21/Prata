@@ -1,0 +1,146 @@
+body {
+    background: #f6f7f9;
+}
+
+.card {
+    border-radius: 8px;
+}
+
+.feature-card {
+    color: inherit;
+    overflow: hidden;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.feature-card:hover {
+    box-shadow: 0 10px 28px rgba(20, 30, 45, 0.12);
+    transform: translateY(-2px);
+}
+
+.feature-card-img {
+    aspect-ratio: 16 / 9;
+    background: #eef1f5;
+    object-fit: contain;
+    padding: 16px;
+}
+
+.feature-card .card-body {
+    padding: 14px;
+}
+
+.feature-card .card-text {
+    font-size: 0.9rem;
+    min-height: 42px;
+}
+
+.feature-card .btn {
+    font-size: 0.875rem;
+    padding: 0.3rem 0.65rem;
+}
+
+.rateio-col {
+    min-width: 460px;
+}
+
+.allocation-warning {
+    color: #b42318;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.allocation-warning-icon {
+    align-items: center;
+    background: #fee4e2;
+    border: 1px solid #fecdca;
+    border-radius: 999px;
+    display: inline-flex;
+    height: 20px;
+    justify-content: center;
+    margin-right: 4px;
+    width: 20px;
+}
+
+tr[data-edit-url] {
+    cursor: pointer;
+}
+
+.category-parent-row td {
+    background: #eef2f7;
+    font-weight: 600;
+}
+
+.category-parent-name {
+    display: inline-block;
+}
+
+.category-child-row td:first-child {
+    padding-left: 2.25rem;
+    position: relative;
+}
+
+.category-child-name::before {
+    color: #7a8492;
+    content: "-";
+    margin-right: 0.6rem;
+}
+
+.budget-panel {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.budget-panel-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+}
+
+.budget-panel-header span {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.budget-panel-expense {
+    border-color: #f1aeb5;
+}
+
+.budget-panel-expense .budget-panel-header,
+.budget-total-expense {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.budget-panel-income {
+    border-color: #9ec5fe;
+}
+
+.budget-panel-income .budget-panel-header,
+.budget-total-income {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.budget-input {
+    min-width: 120px;
+}
+
+.budget-difference {
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    min-width: min(100%, 320px);
+    padding: 12px 16px;
+    text-align: right;
+}
+
+.budget-difference span {
+    color: #6c757d;
+    display: block;
+    font-size: 0.875rem;
+}
+
+.budget-difference strong {
+    display: block;
+    font-size: 1.35rem;
+}

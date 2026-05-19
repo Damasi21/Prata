@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorias - Prata{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Categorias</h1>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <form method="post" class="card card-body">
+            {% csrf_token %}
+            {% if categoria_em_edicao %}
+                <input type="hidden" name="categoria_id" value="{{ categoria_em_edicao.id }}">
+                <div class="alert alert-info py-2">
+                    Editando: {{ categoria_em_edicao }}
+                </div>
+            {% endif %}
+            {{ form.as_p }}
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">
+                    {% if categoria_em_edicao %}Atualizar categoria{% else %}Salvar categoria{% endif %}
+                </button>
+                {% if categoria_em_edicao %}
+                    <a class="btn btn-outline-secondary" href="{% url 'categorias' %}">Cancelar</a>
+                {% endif %}
+            </div>
+            {% if categoria_em_edicao %}
+                <button
+                    class="btn btn-outline-danger mt-3"
+                    type="submit"
+                    name="acao"
+                    value="excluir"
+                    formnovalidate
+                    onclick="return confirm('Excluir esta categoria?');"
+                >
+                    Excluir categoria
+                </button>
+            {% endif %}
+        </form>
+    </div>
+    <div class="col-lg-8">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Uso</th>
+                        <th>Status</th>
+                        <th class="text-end">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grupo in categorias_grupos %}
+                        {% with categoria=grupo.pai %}
+                            <tr class="category-parent-row {% if categoria_em_edicao and categoria.id == categoria_em_edicao.id %}table-primary{% endif %}"
+                                data-edit-url="{% url 'categorias' %}?editar={{ categoria.id }}">
+                                <td>
+                                    <span class="category-parent-name">{{ categoria.nome }}</span>
+                                </td>
+                                <td>{{ categoria.get_tipo_display }}</td>
+                                <td>Referencia</td>
+                                <td>{{ categoria.ativa|yesno:'Ativa,Inativa' }}</td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a class="btn btn-sm btn-outline-primary" href="{% url 'categorias' %}?editar={{ categoria.id }}">Editar</a>
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="categoria_id" value="{{ categoria.id }}">
+                                            <button
+                                                class="btn btn-sm btn-outline-danger"
+                                                type="submit"
+                                                name="acao"
+                                                value="excluir"
+                                                formnovalidate
+                                                onclick="return confirm('Excluir esta categoria?');"
+                                            >
+                                                Excluir
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endwith %}
+                        {% for categoria in grupo.filhas %}
+                            <tr class="category-child-row {% if categoria_em_edicao and categoria.id == categoria_em_edicao.id %}table-primary{% endif %}"
+                                data-edit-url="{% url 'categorias' %}?editar={{ categoria.id }}">
+                                <td>
+                                    <span class="category-child-name">{{ categoria.nome }}</span>
+                                </td>
+                                <td>{{ categoria.get_tipo_display }}</td>
+                                <td>Lancamentos</td>
+                                <td>{{ categoria.ativa|yesno:'Ativa,Inativa' }}</td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a class="btn btn-sm btn-outline-primary" href="{% url 'categorias' %}?editar={{ categoria.id }}">Editar</a>
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="categoria_id" value="{{ categoria.id }}">
+                                            <button
+                                                class="btn btn-sm btn-outline-danger"
+                                                type="submit"
+                                                name="acao"
+                                                value="excluir"
+                                                formnovalidate
+                                                onclick="return confirm('Excluir esta categoria?');"
+                                            >
+                                                Excluir
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% empty %}
+                        <tr><td colspan="5" class="text-secondary">Nenhuma categoria cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('dblclick', function (event) {
+    const row = event.target.closest('tr[data-edit-url]');
+    if (!row || event.target.closest('a, button, form')) return;
+    window.location.href = row.dataset.editUrl;
+});
+</script>
+{% endblock %}

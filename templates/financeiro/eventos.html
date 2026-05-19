@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Eventos - Prata{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Eventos</h1>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <form method="post" class="card card-body">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Salvar evento</button>
+        </form>
+    </div>
+    <div class="col-lg-8">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evento in eventos %}
+                        <tr>
+                            <td>{{ evento.nome }}</td>
+                            <td>{{ evento.ativa|yesno:'Ativo,Inativo' }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="2" class="text-secondary">Nenhum evento cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Contas bancarias - Prata{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Contas bancarias</h1>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <form method="post" class="card card-body">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Salvar conta</button>
+        </form>
+    </div>
+    <div class="col-lg-8">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Banco</th>
+                        <th>Nome</th>
+                        <th>Agencia</th>
+                        <th>Numero</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conta in contas %}
+                        <tr>
+                            <td>{{ conta.banco }}</td>
+                            <td>{{ conta.nome }}</td>
+                            <td>{{ conta.agencia|default:'-' }}</td>
+                            <td>{{ conta.numero|default:'-' }}</td>
+                            <td>{{ conta.ativa|yesno:'Ativa,Inativa' }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-secondary">Nenhuma conta cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Pagar e receber - Prata{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Contas a pagar e receber</h1>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <form method="post" class="card card-body">
+            {% csrf_token %}
+            {% if conta_em_edicao %}
+                <input type="hidden" name="conta_id" value="{{ conta_em_edicao.id }}">
+                <div class="alert alert-info py-2">
+                    Editando: {{ conta_em_edicao.descricao }}
+                </div>
+            {% endif %}
+            <div class="mb-3">
+                {{ form.categoria.label_tag }}
+                {{ form.categoria }}
+                {{ form.categoria.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.evento.label_tag }}
+                {{ form.evento }}
+                {{ form.evento.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.descricao.label_tag }}
+                {{ form.descricao }}
+                {{ form.descricao.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.vencimento.label_tag }}
+                {{ form.vencimento }}
+                {{ form.vencimento.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.valor.label_tag }}
+                {{ form.valor }}
+                {{ form.valor.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.status.label_tag }}
+                {{ form.status }}
+                {{ form.status.errors }}
+            </div>
+
+            {% if not conta_em_edicao %}
+                <hr>
+                <h2 class="h6 mb-3">Recorrencia</h2>
+                <div class="form-check mb-3">
+                    {{ form.criar_recorrencia }}
+                    {{ form.criar_recorrencia.label_tag }}
+                    {{ form.criar_recorrencia.errors }}
+                </div>
+                <div class="mb-3">
+                    {{ form.frequencia_recorrencia.label_tag }}
+                    {{ form.frequencia_recorrencia }}
+                    {{ form.frequencia_recorrencia.errors }}
+                </div>
+                <div class="mb-3">
+                    {{ form.quantidade_recorrencia.label_tag }}
+                    {{ form.quantidade_recorrencia }}
+                    {% if form.quantidade_recorrencia.help_text %}
+                        <div class="form-text">{{ form.quantidade_recorrencia.help_text }}</div>
+                    {% endif %}
+                    {{ form.quantidade_recorrencia.errors }}
+                </div>
+            {% elif conta_em_edicao.recorrencia %}
+                <div class="alert alert-secondary py-2">
+                    Esta conta pertence a recorrencia {{ conta_em_edicao.recorrencia.get_frequencia_display }} de {{ conta_em_edicao.recorrencia.quantidade }} contas.
+                </div>
+            {% endif %}
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">
+                    {% if conta_em_edicao %}Atualizar conta{% else %}Salvar conta{% endif %}
+                </button>
+                {% if conta_em_edicao %}
+                    <a class="btn btn-outline-secondary" href="{% url 'contas_pagar_receber' %}">Cancelar</a>
+                {% endif %}
+            </div>
+            {% if conta_em_edicao %}
+                <input type="hidden" name="excluir_recorrencia" value="0" data-delete-recurring-input>
+                <button
+                    class="btn btn-outline-danger mt-3"
+                    type="submit"
+                    name="acao"
+                    value="excluir"
+                    formnovalidate
+                    data-has-recorrencia="{% if conta_em_edicao.recorrencia %}1{% else %}0{% endif %}"
+                    onclick="return confirmarExclusaoConta(this);"
+                >
+                    Excluir conta
+                </button>
+            {% endif %}
+        </form>
+    </div>
+    <div class="col-lg-8">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Vencimento</th>
+                        <th>Descricao</th>
+                        <th>Natureza</th>
+                        <th>Categoria</th>
+                        <th>Evento</th>
+                        <th class="text-end">Valor</th>
+                        <th>Status</th>
+                        <th>Recorrencia</th>
+                        <th>Conciliacao</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conta in contas %}
+                        <tr class="{% if conta_em_edicao and conta.id == conta_em_edicao.id %}table-primary{% endif %}"
+                            data-edit-url="{% url 'contas_pagar_receber' %}?editar={{ conta.id }}">
+                            <td>{{ conta.vencimento|date:'d/m/Y' }}</td>
+                            <td>{{ conta.descricao }}</td>
+                            <td>{{ conta.natureza }}</td>
+                            <td>{{ conta.categoria }}</td>
+                            <td>{{ conta.evento.nome|default:'-' }}</td>
+                            <td class="text-end">R$ {{ conta.valor }}</td>
+                            <td>{{ conta.get_status_display }}</td>
+                            <td>
+                                {% if conta.recorrencia %}
+                                    {{ conta.recorrencia.get_frequencia_display }} ({{ conta.recorrencia.quantidade }}x)
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if conta.lancamento_conciliado %}
+                                    {{ conta.lancamento_conciliado.data|date:'d/m/Y' }} - R$ {{ conta.lancamento_conciliado.valor }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-secondary">Nenhuma conta cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('dblclick', function (event) {
+    const row = event.target.closest('tr[data-edit-url]');
+    if (!row) return;
+    window.location.href = row.dataset.editUrl;
+});
+
+function confirmarExclusaoConta(button) {
+    if (!confirm('Excluir esta conta a pagar/receber?')) {
+        return false;
+    }
+
+    const input = button.form.querySelector('[data-delete-recurring-input]');
+    if (input) {
+        input.value = '0';
+    }
+
+    if (button.dataset.hasRecorrencia === '1' && confirm('Esta conta faz parte de uma recorrencia. Deseja excluir a recorrencia inteira tambem?')) {
+        input.value = '1';
+    }
+
+    return true;
+}
+</script>
+{% endblock %}

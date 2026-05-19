@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Prata - Inicio{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1">Painel financeiro</h1>
+        <p class="text-secondary mb-0">Escolha uma area para importar, categorizar e acompanhar seu financeiro.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4 feature-grid">
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <a class="card feature-card text-decoration-none h-100" href="{% url 'importar_ofx' %}">
+            <img src="{{ MEDIA_URL }}extrato.png" class="card-img-top feature-card-img" alt="Extrato">
+            <div class="card-body">
+                <h2 class="h6 card-title text-dark">Extrato</h2>
+                <p class="card-text text-secondary">Importe OFX e categorize lancamentos.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <a class="card feature-card text-decoration-none h-100" href="{% url 'contas_pagar_receber' %}">
+            <img src="{{ MEDIA_URL }}contas_a_pagar_e_receber.png" class="card-img-top feature-card-img" alt="Contas a pagar e receber">
+            <div class="card-body">
+                <h2 class="h6 card-title text-dark">Pagar e receber</h2>
+                <p class="card-text text-secondary">Cadastre compromissos e conciliacoes.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <a class="card feature-card text-decoration-none h-100" href="{% url 'importar_excel' %}">
+            <img src="{{ MEDIA_URL }}cartao_credito.png" class="card-img-top feature-card-img" alt="Cartao de credito">
+            <div class="card-body">
+                <h2 class="h6 card-title text-dark">Cartao de credito</h2>
+                <p class="card-text text-secondary">Importe o CSV do cartao.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <a class="card feature-card text-decoration-none h-100" href="{% url 'fluxo_de_caixa' %}">
+            <img src="{{ MEDIA_URL }}fluxo_de_caixa.png" class="card-img-top feature-card-img" alt="Fluxo de caixa">
+            <div class="card-body">
+                <h2 class="h6 card-title text-dark">Fluxo de caixa</h2>
+                <p class="card-text text-secondary">Acompanhe entradas e saidas.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <a class="card feature-card text-decoration-none h-100" href="{% url 'relatorios_bi' %}">
+            <img src="{{ MEDIA_URL }}bi.png" class="card-img-top feature-card-img" alt="Relatorios e B.I">
+            <div class="card-body">
+                <h2 class="h6 card-title text-dark">Relatorios e B.I</h2>
+                <p class="card-text text-secondary">Indicadores e analises gerenciais.</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white fw-semibold">Alertas de budget do mes</div>
+    <div class="card-body">
+        {% if alertas_budget %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Budget</th>
+                            <th>Gasto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alerta in alertas_budget %}
+                            <tr>
+                                <td>{{ alerta.categoria.nome }}</td>
+                                <td>R$ {{ alerta.budget }}</td>
+                                <td class="text-danger fw-semibold">R$ {{ alerta.gasto }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="mb-0 text-secondary">Nenhum budget estourado no mes atual.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

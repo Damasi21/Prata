@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Budgets - Prata{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Budgets mensais</h1>
+<form method="post" class="card card-body budget-form">
+    {% csrf_token %}
+    <div class="row g-3 align-items-end mb-4">
+        <div class="col-md-3">
+            <label class="form-label" for="mes_numero">Mes</label>
+            <select class="form-select" id="mes_numero" name="mes_numero" data-budget-period-control>
+                {% for numero, nome in meses_do_ano %}
+                    <option value="{{ numero }}" {% if numero == mes_numero %}selected{% endif %}>{{ nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="ano">Ano</label>
+            <input class="form-control" type="number" id="ano" name="ano" value="{{ ano }}" min="2000" max="2100" data-budget-period-control>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-primary" type="submit">Salvar budgets</button>
+        </div>
+        <div class="col-md-4">
+            <button
+                class="btn btn-outline-primary"
+                type="submit"
+                name="acao"
+                value="copiar_subsequentes"
+                onclick="return confirm('quer copiar para os meses subsequentes?');"
+            >
+                Copiar para meses subsequentes
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <section class="budget-panel budget-panel-expense">
+                <div class="budget-panel-header">
+                    <h2 class="h5 mb-0">Despesas</h2>
+                    <span>Total de despesas</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for linha in linhas_despesas %}
+                                <tr>
+                                    <td>{{ linha.categoria }}</td>
+                                    <td class="text-end">
+                                        <input class="form-control text-end budget-input" name="budget-{{ linha.categoria.id }}" value="{{ linha.valor }}" placeholder="0.00">
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="2" class="text-secondary">Cadastre categorias de despesa.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Total de despesas</th>
+                                <th class="text-end budget-total budget-total-expense">R$ {{ total_despesas }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-6">
+            <section class="budget-panel budget-panel-income">
+                <div class="budget-panel-header">
+                    <h2 class="h5 mb-0">Receitas</h2>
+                    <span>Total de receitas</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for linha in linhas_receitas %}
+                                <tr>
+                                    <td>{{ linha.categoria }}</td>
+                                    <td class="text-end">
+                                        <input class="form-control text-end budget-input" name="budget-{{ linha.categoria.id }}" value="{{ linha.valor }}" placeholder="0.00">
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="2" class="text-secondary">Cadastre categorias de receita.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Total de receitas</th>
+                                <th class="text-end budget-total budget-total-income">R$ {{ total_receitas }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-4">
+        <div class="budget-difference">
+            <span>Diferenca entre receita e despesa</span>
+            <strong>R$ {{ diferenca_budget }}</strong>
+        </div>
+    </div>
+</form>
+<script>
+document.querySelectorAll('[data-budget-period-control]').forEach(function (control) {
+    control.addEventListener('change', function () {
+        const month = document.getElementById('mes_numero').value;
+        const year = document.getElementById('ano').value;
+        if (!month || !year) return;
+        window.location.href = "{% url 'budgets' %}?mes_numero=" + encodeURIComponent(month) + "&ano=" + encodeURIComponent(year);
+    });
+});
+</script>
+{% endblock %}
