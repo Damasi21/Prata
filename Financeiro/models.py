@@ -19,6 +19,8 @@ class ContaBancaria(TimeStampedModel):
     banco = models.CharField(max_length=120)
     agencia = models.CharField(max_length=30, blank=True)
     numero = models.CharField(max_length=40, blank=True)
+    saldo_inicial = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    data_saldo_inicial = models.DateField(null=True, blank=True)
     ativa = models.BooleanField(default=True)
 
     class Meta:

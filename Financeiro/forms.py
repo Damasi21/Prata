@@ -18,7 +18,14 @@ class BootstrapFormMixin:
 class ContaBancariaForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = ContaBancaria
-        fields = ['nome', 'banco', 'agencia', 'numero', 'ativa']
+        fields = ['nome', 'banco', 'agencia', 'numero', 'saldo_inicial', 'data_saldo_inicial', 'ativa']
+        labels = {
+            'saldo_inicial': 'Saldo inicial',
+            'data_saldo_inicial': 'Data do saldo inicial',
+        }
+        widgets = {
+            'data_saldo_inicial': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 
 class UsuarioCadastroForm(BootstrapFormMixin, UserCreationForm):

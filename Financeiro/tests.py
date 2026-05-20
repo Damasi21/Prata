@@ -5,7 +5,16 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Budget, Categoria, ContaBancaria, ContaPagarReceber, Lancamento, RateioLancamento, RecorrenciaConta
+from .models import (
+    Budget,
+    Categoria,
+    ContaBancaria,
+    ContaPagarReceber,
+    Importacao,
+    Lancamento,
+    RateioLancamento,
+    RecorrenciaConta,
+)
 from .views import _datas_recorrencia
 
 
@@ -197,6 +206,170 @@ class CategoriaTests(TestCase):
 
         self.assertRedirects(resposta, reverse('categorias'))
         self.assertTrue(Categoria.objects.filter(id=categoria.id).exists())
+
+
+class ContaBancariaTests(TestCase):
+    def setUp(self):
+        User.objects.create_user(username='usuario', password='senha-segura')
+        self.client.login(username='usuario', password='senha-segura')
+
+    def test_contas_bancarias_atualiza_conta_existente(self):
+        conta = ContaBancaria.objects.create(nome='Principal', banco='Banco')
+
+        resposta = self.client.post(
+            reverse('contas_bancarias'),
+            {
+                'conta_id': conta.id,
+                'nome': 'Reserva',
+                'banco': 'Novo banco',
+                'agencia': '1234',
+                'numero': '5678',
+                'saldo_inicial': '-250.75',
+                'data_saldo_inicial': '2026-05-10',
+                'ativa': 'on',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('contas_bancarias'))
+        conta.refresh_from_db()
+        self.assertEqual(conta.nome, 'Reserva')
+        self.assertEqual(conta.banco, 'Novo banco')
+        self.assertEqual(conta.saldo_inicial, Decimal('-250.75'))
+        self.assertEqual(conta.data_saldo_inicial, date(2026, 5, 10))
+
+    def test_contas_bancarias_exclui_conta_sem_lancamentos(self):
+        conta = ContaBancaria.objects.create(nome='Principal', banco='Banco')
+
+        resposta = self.client.post(
+            reverse('contas_bancarias'),
+            {
+                'conta_id': conta.id,
+                'acao': 'excluir',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('contas_bancarias'))
+        self.assertFalse(ContaBancaria.objects.filter(id=conta.id).exists())
+
+    def test_contas_bancarias_nao_exclui_conta_com_lancamento(self):
+        conta = ContaBancaria.objects.create(nome='Principal', banco='Banco')
+        Lancamento.objects.create(
+            conta=conta,
+            data=date(2026, 5, 1),
+            descricao='Compra',
+            valor=Decimal('-50.00'),
+            tipo=Lancamento.DEBITO,
+        )
+
+        resposta = self.client.post(
+            reverse('contas_bancarias'),
+            {
+                'conta_id': conta.id,
+                'acao': 'excluir',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('contas_bancarias'))
+        self.assertTrue(ContaBancaria.objects.filter(id=conta.id).exists())
+
+    def test_extrato_com_conta_filtrada_calcula_saldo_acumulado(self):
+        conta = ContaBancaria.objects.create(
+            nome='Principal',
+            banco='Banco',
+            saldo_inicial=Decimal('1000.00'),
+            data_saldo_inicial=date(2026, 5, 1),
+        )
+        Lancamento.objects.create(
+            conta=conta,
+            data=date(2026, 5, 2),
+            descricao='Compra',
+            valor=Decimal('-150.00'),
+            tipo=Lancamento.DEBITO,
+        )
+        Lancamento.objects.create(
+            conta=conta,
+            data=date(2026, 5, 3),
+            descricao='Recebimento',
+            valor=Decimal('300.00'),
+            tipo=Lancamento.CREDITO,
+        )
+
+        resposta = self.client.get(reverse('importar_ofx'), {'conta': conta.id})
+
+        linhas = resposta.context['extrato_linhas']
+        self.assertEqual(linhas[0].tipo, 'saldo_inicial')
+        self.assertEqual(linhas[0].saldo, Decimal('1000.00'))
+        self.assertEqual(linhas[1].saldo, Decimal('850.00'))
+        self.assertEqual(linhas[2].saldo, Decimal('1150.00'))
+        self.assertEqual(resposta.context['saldo_final'], Decimal('1150.00'))
+        self.assertContains(resposta, 'Saldo inicial')
+
+
+class CategorizacaoImportacaoTests(TestCase):
+    def setUp(self):
+        User.objects.create_user(username='usuario', password='senha-segura')
+        self.client.login(username='usuario', password='senha-segura')
+        self.conta = ContaBancaria.objects.create(nome='Principal', banco='Banco')
+        self.despesa = criar_categoria_filha('Alimentacao', tipo=Categoria.DESPESA, pai_nome='Gastos')
+        self.receita = criar_categoria_filha('Salario', tipo=Categoria.RECEITA, pai_nome='Ganhos')
+
+    def _criar_preview(self):
+        session = self.client.session
+        session['importacao_preview'] = {
+            'conta_id': self.conta.id,
+            'conta_nome': str(self.conta),
+            'origem': Importacao.OFX,
+            'arquivo_nome': 'extrato.ofx',
+            'arquivo_conteudo': '',
+            'lancamentos': [
+                {
+                    'id': 1,
+                    'data': '2026-05-01',
+                    'descricao': 'Mercado',
+                    'valor': '-120.00',
+                    'tipo': Lancamento.DEBITO,
+                    'identificador': 'negativo',
+                },
+                {
+                    'id': 2,
+                    'data': '2026-05-02',
+                    'descricao': 'Pagamento',
+                    'valor': '500.00',
+                    'tipo': Lancamento.CREDITO,
+                    'identificador': 'positivo',
+                },
+            ],
+        }
+        session.save()
+
+    def test_preview_filtra_categorias_por_sinal_do_valor(self):
+        self._criar_preview()
+
+        resposta = self.client.get(reverse('categorizar_ofx_preview'))
+
+        lancamentos = resposta.context['lancamentos']
+        self.assertEqual(list(lancamentos[0].categorias), [self.despesa])
+        self.assertEqual(list(lancamentos[1].categorias), [self.receita])
+        self.assertContains(resposta, '>Alimentacao</option>')
+        self.assertContains(resposta, '>Salario</option>')
+        self.assertNotContains(resposta, 'Gastos / Alimentacao')
+        self.assertNotContains(resposta, 'Ganhos / Salario')
+
+    def test_preview_rejeita_categoria_incompativel_com_sinal_do_valor(self):
+        self._criar_preview()
+
+        resposta = self.client.post(
+            reverse('categorizar_ofx_preview'),
+            {
+                'alloc-1-categoria': str(self.receita.id),
+                'alloc-1-percentual': '100',
+                'alloc-2-categoria': '',
+                'alloc-2-percentual': '100',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('categorizar_ofx_preview'))
+        self.assertFalse(Lancamento.objects.exists())
 
 
 class RecorrenciaContaTests(TestCase):

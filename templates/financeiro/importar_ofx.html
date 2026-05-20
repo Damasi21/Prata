@@ -18,11 +18,20 @@
     <div class="col-lg-7">
         <form method="get" class="card card-body">
             <div class="row g-3 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-4">
+                    <label class="form-label" for="conta">Conta</label>
+                    <select class="form-select" id="conta" name="conta" data-balance-account-select>
+                        <option value="">Todas</option>
+                        {% for conta in contas_ativas %}
+                            <option value="{{ conta.id }}" {% if conta.id|stringformat:'s' == conta_filtro_id %}selected{% endif %}>{{ conta }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label" for="data_inicio">Data inicial</label>
                     <input class="form-control" id="data_inicio" name="data_inicio" type="date" value="{{ data_inicio|date:'Y-m-d' }}">
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <label class="form-label" for="data_fim">Data final</label>
                     <input class="form-control" id="data_fim" name="data_fim" type="date" value="{{ data_fim|date:'Y-m-d' }}">
                 </div>
@@ -31,8 +40,15 @@
                 </div>
             </div>
         </form>
+        <div class="initial-balance-panel mt-3" data-initial-balance-panel hidden>
+            <span>Saldo inicial</span>
+            <strong data-initial-balance-value>R$ 0,00</strong>
+            <small data-initial-balance-date></small>
+        </div>
     </div>
 </div>
+
+{{ contas_saldos|json_script:"account-balances-data" }}
 
 <div class="table-responsive">
     <table class="table table-striped align-middle">
@@ -45,10 +61,74 @@
                 <th>Evento</th>
                 <th>Categoria</th>
                 <th class="text-end">Valor</th>
+                <th class="text-end">Saldo</th>
                 <th class="text-end">Acoes</th>
             </tr>
         </thead>
         <tbody>
+            {% if conta_filtro %}
+                {% for linha in extrato_linhas %}
+                    {% if linha.tipo == 'saldo_inicial' %}
+                        <tr class="table-info">
+                            <td>{{ linha.data|date:'d/m/Y'|default:'-' }}</td>
+                            <td class="fw-semibold">{{ linha.descricao }}</td>
+                            <td>-</td>
+                            <td>{{ linha.conta }}</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="text-end {% if linha.valor < 0 %}text-danger{% else %}text-success{% endif %}">
+                                R$ {{ linha.valor }}
+                            </td>
+                            <td class="text-end fw-semibold {% if linha.saldo < 0 %}text-danger{% else %}text-success{% endif %}">
+                                R$ {{ linha.saldo }}
+                            </td>
+                            <td class="text-end">-</td>
+                        </tr>
+                    {% else %}
+                        {% with lancamento=linha.lancamento %}
+                            <tr>
+                                <td>{{ lancamento.data|date:'d/m/Y' }}</td>
+                                <td>{{ lancamento.descricao }}</td>
+                                <td>
+                                    {% if lancamento.importacao %}
+                                        {{ lancamento.importacao.get_origem_display }}
+                                    {% else %}
+                                        Manual
+                                    {% endif %}
+                                </td>
+                                <td>{{ lancamento.conta }}</td>
+                                <td>{{ lancamento.evento.nome|default:'-' }}</td>
+                                <td>
+                                    {% for rateio in lancamento.rateios.all %}
+                                        {{ rateio.categoria.nome }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        -
+                                    {% endfor %}
+                                </td>
+                                <td class="text-end {% if lancamento.valor < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    R$ {{ lancamento.valor }}
+                                </td>
+                                <td class="text-end fw-semibold {% if linha.saldo < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    R$ {{ linha.saldo }}
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" action="{% url 'excluir_lancamento' lancamento.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button
+                                            class="btn btn-sm btn-outline-danger"
+                                            type="submit"
+                                            onclick="return confirm('Excluir este lancamento?');"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endif %}
+                {% endfor %}
+            {% else %}
             {% for lancamento in lancamentos %}
                 <tr>
                     <td>{{ lancamento.data|date:'d/m/Y' }}</td>
@@ -72,6 +152,7 @@
                     <td class="text-end {% if lancamento.valor < 0 %}text-danger{% else %}text-success{% endif %}">
                         R$ {{ lancamento.valor }}
                     </td>
+                    <td class="text-end">-</td>
                     <td class="text-end">
                         <form method="post" action="{% url 'excluir_lancamento' lancamento.id %}" class="d-inline">
                             {% csrf_token %}
@@ -86,11 +167,17 @@
                         </form>
                     </td>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="8" class="text-secondary">Nenhum lancamento encontrado para o periodo selecionado.</td>
-                </tr>
             {% endfor %}
+            {% endif %}
+            {% if conta_filtro and extrato_linhas|length == 1 %}
+                <tr>
+                    <td colspan="9" class="text-secondary">Nenhum lancamento encontrado para o periodo selecionado.</td>
+                </tr>
+            {% elif not conta_filtro and not lancamentos %}
+                <tr>
+                    <td colspan="9" class="text-secondary">Nenhum lancamento encontrado para o periodo selecionado.</td>
+                </tr>
+            {% endif %}
         </tbody>
     </table>
 </div>

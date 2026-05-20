@@ -83,38 +83,38 @@
                             <div class="allocation-list" data-lancamento="{{ lancamento.id }}">
                                 {% for rateio in lancamento.rateios.all %}
                                     <div class="row g-2 mb-2 allocation-row">
-                                        <div class="{% if preview %}col-md-8{% else %}col-md-7{% endif %}">
+                                        <div class="allocation-category-col">
                                             <select class="form-select" name="alloc-{{ lancamento.id }}-categoria">
                                                 <option value="">Categoria</option>
-                                                {% for categoria in categorias %}
-                                                    <option value="{{ categoria.id }}" {% if categoria.id == rateio.categoria_id %}selected{% endif %}>{{ categoria }}</option>
+                                                {% for categoria in lancamento.categorias %}
+                                                    <option value="{{ categoria.id }}" {% if categoria.id == rateio.categoria_id %}selected{% endif %}>{{ categoria.nome }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
-                                        <div class="{% if preview %}col-md-4{% else %}col-md-3{% endif %}">
-                                            <input class="form-control" name="alloc-{{ lancamento.id }}-percentual" value="{{ rateio.percentual }}" placeholder="%">
+                                        <div class="allocation-percent-col">
+                                            <input class="form-control allocation-percent-input" name="alloc-{{ lancamento.id }}-percentual" value="{{ rateio.percentual }}" placeholder="%">
                                         </div>
                                         {% if not preview %}
-                                            <div class="col-md-2">
+                                            <div class="allocation-remove-col">
                                                 <button class="btn btn-outline-danger w-100 remove-allocation" type="button">Remover</button>
                                             </div>
                                         {% endif %}
                                     </div>
                                 {% empty %}
                                     <div class="row g-2 mb-2 allocation-row">
-                                        <div class="{% if preview %}col-md-8{% else %}col-md-7{% endif %}">
+                                        <div class="allocation-category-col">
                                             <select class="form-select" name="alloc-{{ lancamento.id }}-categoria">
                                                 <option value="">Categoria</option>
-                                                {% for categoria in categorias %}
-                                                    <option value="{{ categoria.id }}">{{ categoria }}</option>
+                                                {% for categoria in lancamento.categorias %}
+                                                    <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
-                                        <div class="{% if preview %}col-md-4{% else %}col-md-3{% endif %}">
-                                            <input class="form-control" name="alloc-{{ lancamento.id }}-percentual" value="100" placeholder="%">
+                                        <div class="allocation-percent-col">
+                                            <input class="form-control allocation-percent-input" name="alloc-{{ lancamento.id }}-percentual" value="100" placeholder="%">
                                         </div>
                                         {% if not preview %}
-                                            <div class="col-md-2">
+                                            <div class="allocation-remove-col">
                                                 <button class="btn btn-outline-danger w-100 remove-allocation" type="button">Remover</button>
                                             </div>
                                         {% endif %}

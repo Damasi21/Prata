@@ -100,6 +100,8 @@ document.addEventListener('DOMContentLoaded', function () {
             form.requestSubmit();
         });
     }
+
+    setupInitialBalancePanel();
 });
 
 function validateAllocationList(list, options = {}) {
@@ -137,4 +139,40 @@ function validateAllocationList(list, options = {}) {
 function validateAllocationListForForm(list) {
     const form = list.closest('form');
     return validateAllocationList(list, { allowEmpty: form && form.dataset.allowPartialSave === 'true' });
+}
+
+function setupInitialBalancePanel() {
+    const accountSelect = document.querySelector('[data-balance-account-select]');
+    const panel = document.querySelector('[data-initial-balance-panel]');
+    const dataElement = document.getElementById('account-balances-data');
+    if (!accountSelect || !panel || !dataElement) return;
+
+    const balances = JSON.parse(dataElement.textContent || '{}');
+    const valueElement = panel.querySelector('[data-initial-balance-value]');
+    const dateElement = panel.querySelector('[data-initial-balance-date]');
+
+    const updatePanel = () => {
+        const accountData = balances[accountSelect.value];
+        if (!accountData) {
+            panel.hidden = true;
+            return;
+        }
+
+        const amount = Number(accountData.saldo || 0);
+        valueElement.textContent = formatCurrency(amount);
+        valueElement.classList.toggle('text-danger', amount < 0);
+        valueElement.classList.toggle('text-success', amount >= 0);
+        dateElement.textContent = accountData.data ? `Data do saldo: ${accountData.data}` : 'Data do saldo nao informada';
+        panel.hidden = false;
+    };
+
+    accountSelect.addEventListener('change', updatePanel);
+    updatePanel();
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(amount);
 }

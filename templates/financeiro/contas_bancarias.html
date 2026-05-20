@@ -8,8 +8,33 @@
     <div class="col-lg-4">
         <form method="post" class="card card-body">
             {% csrf_token %}
+            {% if conta_em_edicao %}
+                <input type="hidden" name="conta_id" value="{{ conta_em_edicao.id }}">
+                <div class="alert alert-info py-2">
+                    Editando: {{ conta_em_edicao }}
+                </div>
+            {% endif %}
             {{ form.as_p }}
-            <button class="btn btn-primary" type="submit">Salvar conta</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">
+                    {% if conta_em_edicao %}Atualizar conta{% else %}Salvar conta{% endif %}
+                </button>
+                {% if conta_em_edicao %}
+                    <a class="btn btn-outline-secondary" href="{% url 'contas_bancarias' %}">Cancelar</a>
+                {% endif %}
+            </div>
+            {% if conta_em_edicao %}
+                <button
+                    class="btn btn-outline-danger mt-3"
+                    type="submit"
+                    name="acao"
+                    value="excluir"
+                    formnovalidate
+                    onclick="return confirm('Excluir esta conta bancaria?');"
+                >
+                    Excluir conta
+                </button>
+            {% endif %}
         </form>
     </div>
     <div class="col-lg-8">
@@ -21,24 +46,38 @@
                         <th>Nome</th>
                         <th>Agencia</th>
                         <th>Numero</th>
+                        <th class="text-end">Saldo inicial</th>
+                        <th>Data do saldo</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for conta in contas %}
-                        <tr>
+                        <tr class="{% if conta_em_edicao and conta.id == conta_em_edicao.id %}table-primary{% endif %}"
+                            data-edit-url="{% url 'contas_bancarias' %}?editar={{ conta.id }}">
                             <td>{{ conta.banco }}</td>
                             <td>{{ conta.nome }}</td>
                             <td>{{ conta.agencia|default:'-' }}</td>
                             <td>{{ conta.numero|default:'-' }}</td>
+                            <td class="text-end {% if conta.saldo_inicial < 0 %}text-danger{% else %}text-success{% endif %}">
+                                R$ {{ conta.saldo_inicial }}
+                            </td>
+                            <td>{{ conta.data_saldo_inicial|date:'d/m/Y'|default:'-' }}</td>
                             <td>{{ conta.ativa|yesno:'Ativa,Inativa' }}</td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="5" class="text-secondary">Nenhuma conta cadastrada.</td></tr>
+                        <tr><td colspan="7" class="text-secondary">Nenhuma conta cadastrada.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('dblclick', function (event) {
+    const row = event.target.closest('tr[data-edit-url]');
+    if (!row || event.target.closest('a, button, form')) return;
+    window.location.href = row.dataset.editUrl;
+});
+</script>
 {% endblock %}

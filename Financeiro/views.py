@@ -116,6 +116,21 @@ def _categorias_operacionais():
     return Categoria.objects.filter(ativa=True, pai__isnull=False).select_related('pai')
 
 
+def _categorias_por_natureza(categorias):
+    categorias = list(categorias)
+    return {
+        Categoria.DESPESA: [categoria for categoria in categorias if categoria.tipo == Categoria.DESPESA],
+        Categoria.RECEITA: [categoria for categoria in categorias if categoria.tipo == Categoria.RECEITA],
+    }
+
+
+def _categorias_ids_por_natureza(categorias_por_natureza):
+    return {
+        natureza: {categoria.id for categoria in categorias}
+        for natureza, categorias in categorias_por_natureza.items()
+    }
+
+
 def _usuario_pode_gerenciar_usuarios(user):
     return user.is_authenticated and user.is_staff
 
@@ -361,12 +376,37 @@ def index(request):
 @require_http_methods(['GET', 'POST'])
 @login_required
 def contas_bancarias(request):
-    form = ContaBancariaForm(request.POST or None)
+    conta_em_edicao = None
+    conta_id = request.POST.get('conta_id') or request.GET.get('editar')
+    if conta_id:
+        conta_em_edicao = get_object_or_404(ContaBancaria, id=conta_id)
+
+    form = ContaBancariaForm(request.POST or None, instance=conta_em_edicao)
+    if request.method == 'POST' and conta_em_edicao and request.POST.get('acao') == 'excluir':
+        if conta_em_edicao.lancamentos.exists() or conta_em_edicao.importacoes.exists():
+            messages.error(request, 'Esta conta bancaria possui lancamentos/importacoes e nao pode ser excluida.')
+            return redirect('contas_bancarias')
+        nome = str(conta_em_edicao)
+        try:
+            conta_em_edicao.delete()
+        except ProtectedError:
+            messages.error(request, 'Esta conta bancaria possui vinculos e nao pode ser excluida.')
+        else:
+            messages.success(request, f'Conta bancaria "{nome}" excluida com sucesso.')
+        return redirect('contas_bancarias')
+
     if request.method == 'POST' and form.is_valid():
         form.save()
-        messages.success(request, 'Conta bancaria cadastrada com sucesso.')
+        if conta_em_edicao:
+            messages.success(request, 'Conta bancaria atualizada com sucesso.')
+        else:
+            messages.success(request, 'Conta bancaria cadastrada com sucesso.')
         return redirect('contas_bancarias')
-    return render(request, 'financeiro/contas_bancarias.html', {'form': form, 'contas': ContaBancaria.objects.all()})
+    return render(
+        request,
+        'financeiro/contas_bancarias.html',
+        {'form': form, 'contas': ContaBancaria.objects.all(), 'conta_em_edicao': conta_em_edicao},
+    )
 
 
 @require_http_methods(['GET', 'POST'])
@@ -433,19 +473,68 @@ def importar_ofx(request):
 
     data_inicio = _data_filtro(request.GET.get('data_inicio'))
     data_fim = _data_filtro(request.GET.get('data_fim'))
+    contas_ativas = ContaBancaria.objects.filter(ativa=True)
+    conta_filtro_id = request.GET.get('conta') or ''
+    conta_filtro = None
+    if conta_filtro_id:
+        conta_filtro = get_object_or_404(ContaBancaria, id=conta_filtro_id, ativa=True)
+
     lancamentos = Lancamento.objects.select_related('conta', 'importacao', 'evento').prefetch_related(
         'rateios__categoria'
     )
+    if conta_filtro:
+        lancamentos = lancamentos.filter(conta=conta_filtro).order_by('data', 'id')
     if data_inicio:
         lancamentos = lancamentos.filter(data__gte=data_inicio)
     if data_fim:
         lancamentos = lancamentos.filter(data__lte=data_fim)
 
+    extrato_linhas = []
+    saldo_atual = None
+    if conta_filtro:
+        saldo_atual = conta_filtro.saldo_inicial
+        extrato_linhas.append(
+            SimpleNamespace(
+                tipo='saldo_inicial',
+                data=conta_filtro.data_saldo_inicial,
+                descricao='Saldo inicial',
+                conta=conta_filtro,
+                valor=conta_filtro.saldo_inicial,
+                saldo=saldo_atual,
+            )
+        )
+        for lancamento in lancamentos:
+            saldo_atual += lancamento.valor
+            extrato_linhas.append(
+                SimpleNamespace(
+                    tipo='lancamento',
+                    lancamento=lancamento,
+                    data=lancamento.data,
+                    descricao=lancamento.descricao,
+                    conta=lancamento.conta,
+                    valor=lancamento.valor,
+                    saldo=saldo_atual,
+                )
+            )
+
+    contas_saldos = {
+        str(conta.id): {
+            'saldo': str(conta.saldo_inicial),
+            'data': conta.data_saldo_inicial.strftime('%d/%m/%Y') if conta.data_saldo_inicial else '',
+        }
+        for conta in contas_ativas
+    }
     context = {
         'form': form,
         'lancamentos': lancamentos,
+        'extrato_linhas': extrato_linhas,
         'data_inicio': data_inicio,
         'data_fim': data_fim,
+        'contas_ativas': contas_ativas,
+        'conta_filtro': conta_filtro,
+        'conta_filtro_id': conta_filtro_id,
+        'saldo_final': saldo_atual,
+        'contas_saldos': contas_saldos,
     }
     return render(request, 'financeiro/importar_ofx.html', context)
 
@@ -475,28 +564,38 @@ def categorizar_ofx_preview(request):
         messages.info(request, 'Importe um arquivo antes de categorizar.')
         return redirect('importar_ofx')
 
-    categorias_ativas = _categorias_operacionais()
-    categorias_ativas_ids = set(categorias_ativas.values_list('id', flat=True))
+    categorias_por_natureza = _categorias_por_natureza(_categorias_operacionais())
+    categorias_ids_por_natureza = _categorias_ids_por_natureza(categorias_por_natureza)
+    categorias_ativas_ids = set().union(*categorias_ids_por_natureza.values())
     sugestoes_rateio = _sugestoes_rateio_por_descricao(
         [item['descricao'] for item in preview['lancamentos']],
         categorias_ativas_ids,
     )
-    lancamentos = [
-        SimpleNamespace(
-            id=item['id'],
-            data=date.fromisoformat(item['data']),
-            descricao=item['descricao'],
-            valor=Decimal(item['valor']),
-            tipo=item['tipo'],
-            identificador_externo=item['identificador'],
-            evento_id=None,
-            rateios=PreviewRateios(sugestoes_rateio[item['descricao']])
-            if item['descricao'] in sugestoes_rateio
-            else EmptyRateios(),
-            tem_sugestao_categoria=item['descricao'] in sugestoes_rateio,
+    lancamentos = []
+    for item in preview['lancamentos']:
+        valor = Decimal(item['valor'])
+        natureza = _natureza_lancamento(valor)
+        categorias_do_lancamento = categorias_por_natureza[natureza]
+        categorias_ids_do_lancamento = categorias_ids_por_natureza[natureza]
+        rateios_sugeridos = [
+            rateio
+            for rateio in sugestoes_rateio.get(item['descricao'], [])
+            if rateio.categoria_id in categorias_ids_do_lancamento
+        ]
+        lancamentos.append(
+            SimpleNamespace(
+                id=item['id'],
+                data=date.fromisoformat(item['data']),
+                descricao=item['descricao'],
+                valor=valor,
+                tipo=item['tipo'],
+                identificador_externo=item['identificador'],
+                evento_id=None,
+                categorias=categorias_do_lancamento,
+                rateios=PreviewRateios(rateios_sugeridos) if rateios_sugeridos else EmptyRateios(),
+                tem_sugestao_categoria=bool(rateios_sugeridos),
+            )
         )
-        for item in preview['lancamentos']
-    ]
     importacao_preview = SimpleNamespace(
         conta=preview['conta_nome'],
         origem=preview.get('origem', Importacao.OFX),
@@ -544,7 +643,7 @@ def categorizar_ofx_preview(request):
                     request,
                     lancamento_id,
                     item['descricao'],
-                    categorias_ativas_ids,
+                    categorias_ids_por_natureza[_natureza_lancamento(Decimal(item['valor']))],
                     obrigatorio=False,
                 )
             except ValueError as erro:
@@ -642,7 +741,6 @@ def categorizar_ofx_preview(request):
         {
             'importacao': importacao_preview,
             'lancamentos': lancamentos,
-            'categorias': categorias_ativas,
             'eventos': Evento.objects.filter(ativa=True),
             'conciliacoes_sugeridas': conciliacoes_sugeridas,
             'preview': True,
@@ -655,12 +753,14 @@ def categorizar_ofx_preview(request):
 def categorizar_importacao(request, importacao_id):
     importacao = get_object_or_404(Importacao, id=importacao_id)
     lancamentos = importacao.lancamentos.prefetch_related('rateios__categoria').all()
-    categorias_ativas = _categorias_operacionais()
+    categorias_por_natureza = _categorias_por_natureza(_categorias_operacionais())
+    categorias_ids_por_natureza = _categorias_ids_por_natureza(categorias_por_natureza)
+    for lancamento in lancamentos:
+        lancamento.categorias = categorias_por_natureza[_natureza_lancamento(lancamento.valor)]
     eventos_ativos = Evento.objects.filter(ativa=True)
     eventos_ativos_ids = set(eventos_ativos.values_list('id', flat=True))
 
     if request.method == 'POST':
-        categorias_ativas_ids = set(categorias_ativas.values_list('id', flat=True))
         rateios_por_lancamento = {}
         eventos_por_lancamento = {}
         for lancamento in lancamentos:
@@ -673,7 +773,7 @@ def categorizar_importacao(request, importacao_id):
                     request,
                     lancamento.id,
                     lancamento.descricao,
-                    categorias_ativas_ids,
+                    categorias_ids_por_natureza[_natureza_lancamento(lancamento.valor)],
                 )
             except ValueError as erro:
                 messages.error(request, str(erro))
@@ -698,7 +798,7 @@ def categorizar_importacao(request, importacao_id):
     return render(
         request,
         'financeiro/categorizar_importacao.html',
-        {'importacao': importacao, 'lancamentos': lancamentos, 'categorias': categorias_ativas, 'eventos': eventos_ativos},
+        {'importacao': importacao, 'lancamentos': lancamentos, 'eventos': eventos_ativos},
     )
 
 

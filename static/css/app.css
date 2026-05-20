@@ -42,6 +42,27 @@ body {
     min-width: 460px;
 }
 
+.allocation-category-col {
+    flex: 1 1 260px;
+    min-width: 220px;
+}
+
+.allocation-percent-col {
+    flex: 0 0 88px;
+    max-width: 88px;
+}
+
+.allocation-percent-input {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    text-align: center;
+}
+
+.allocation-remove-col {
+    flex: 0 0 112px;
+    max-width: 112px;
+}
+
 .allocation-warning {
     color: #b42318;
     font-size: 0.875rem;
@@ -143,4 +164,28 @@ tr[data-edit-url] {
 .budget-difference strong {
     display: block;
     font-size: 1.35rem;
+}
+
+.initial-balance-panel {
+    background: #ffffff;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+
+.initial-balance-panel span,
+.initial-balance-panel small {
+    color: #667085;
+    display: block;
+}
+
+.initial-balance-panel span {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.initial-balance-panel strong {
+    display: block;
+    font-size: 1.25rem;
+    margin-top: 2px;
 }
