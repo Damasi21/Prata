@@ -6,6 +6,7 @@ urlpatterns = [
     path('login/', views.tela_login, name='tela_login'),
     path('cadastro/', views.cadastro_usuario, name='cadastro_usuario'),
     path('sair/', views.sair, name='sair'),
+    path('usuarios/', views.usuarios, name='usuarios'),
     path('', views.index, name='index'),
     path('contas-bancarias/', views.contas_bancarias, name='contas_bancarias'),
     path('categorias/', views.categorias, name='categorias'),

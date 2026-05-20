@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Prata - Usuarios{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1">Usuarios</h1>
+        <p class="text-secondary mb-0">Aprove novos cadastros e controle quem pode acessar o sistema.</p>
+    </div>
+    <span class="badge text-bg-warning">{{ pendentes }} pendente{{ pendentes|pluralize }}</span>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Perfil</th>
+                    <th>Status</th>
+                    <th class="text-end">Acao</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                    <tr>
+                        <td class="fw-semibold">{{ usuario.username }}</td>
+                        <td>{{ usuario.get_full_name|default:'-' }}</td>
+                        <td>{{ usuario.email|default:'-' }}</td>
+                        <td>
+                            {% if usuario.is_superuser %}
+                                <span class="badge text-bg-dark">Admin</span>
+                            {% elif usuario.is_staff %}
+                                <span class="badge text-bg-secondary">Equipe</span>
+                            {% else %}
+                                <span class="badge text-bg-light">Usuario</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.is_active %}
+                                <span class="badge text-bg-success">Liberado</span>
+                            {% else %}
+                                <span class="badge text-bg-warning">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if usuario.is_active %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                                    <input type="hidden" name="acao" value="bloquear">
+                                    <button class="btn btn-outline-danger btn-sm" type="submit" {% if usuario == request.user %}disabled{% endif %}>
+                                        Bloquear
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                                    <input type="hidden" name="acao" value="aprovar">
+                                    <button class="btn btn-success btn-sm" type="submit">Aprovar</button>
+                                </form>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                                    <input type="hidden" name="acao" value="reprovar">
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">Reprovar</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-4">Nenhum usuario cadastrado.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

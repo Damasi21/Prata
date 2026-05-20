@@ -51,7 +51,7 @@ class LoginTests(TestCase):
         self.assertTrue(usuario.is_staff)
         self.assertTrue(usuario.is_superuser)
 
-    def test_cadastro_publico_cria_usuario_comum_quando_ja_existe_usuario(self):
+    def test_cadastro_publico_cria_usuario_pendente_quando_ja_existe_usuario(self):
         User.objects.create_user(username='usuario', password='senha-segura')
 
         resposta = self.client.post(
@@ -66,11 +66,57 @@ class LoginTests(TestCase):
             },
         )
 
-        self.assertRedirects(resposta, reverse('index'))
+        self.assertRedirects(resposta, reverse('tela_login'))
         usuario = User.objects.get(username='novo')
-        self.assertTrue(usuario.is_active)
+        self.assertFalse(usuario.is_active)
         self.assertFalse(usuario.is_staff)
         self.assertFalse(usuario.is_superuser)
+
+    def test_usuario_pendente_nao_consegue_logar(self):
+        User.objects.create_user(username='pendente', password='senha-segura', is_active=False)
+
+        resposta = self.client.post(
+            reverse('tela_login'),
+            {
+                'username': 'pendente',
+                'password': 'senha-segura',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('tela_login'))
+
+    def test_admin_aprova_usuario_pendente(self):
+        admin = User.objects.create_user(username='admin', password='senha-segura', is_staff=True)
+        pendente = User.objects.create_user(username='pendente', password='senha-segura', is_active=False)
+        self.client.force_login(admin)
+
+        resposta = self.client.post(
+            reverse('usuarios'),
+            {
+                'usuario_id': pendente.id,
+                'acao': 'aprovar',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('usuarios'))
+        pendente.refresh_from_db()
+        self.assertTrue(pendente.is_active)
+
+    def test_admin_reprova_usuario_pendente(self):
+        admin = User.objects.create_user(username='admin', password='senha-segura', is_staff=True)
+        pendente = User.objects.create_user(username='pendente', password='senha-segura', is_active=False)
+        self.client.force_login(admin)
+
+        resposta = self.client.post(
+            reverse('usuarios'),
+            {
+                'usuario_id': pendente.id,
+                'acao': 'reprovar',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('usuarios'))
+        self.assertFalse(User.objects.filter(username='pendente').exists())
 
 
 class CategoriaTests(TestCase):

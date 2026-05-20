@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -114,6 +114,10 @@ def _natureza_lancamento(valor):
 
 def _categorias_operacionais():
     return Categoria.objects.filter(ativa=True, pai__isnull=False).select_related('pai')
+
+
+def _usuario_pode_gerenciar_usuarios(user):
+    return user.is_authenticated and user.is_staff
 
 
 def _motivo_bloqueio_exclusao_categoria(categoria):
@@ -238,6 +242,11 @@ def tela_login(request):
                 request.session.set_expiry(0)
             return redirect(next_url)
 
+        usuario_pendente = User.objects.filter(username=username, is_active=False).first()
+        if usuario_pendente and usuario_pendente.check_password(password):
+            messages.info(request, 'Seu cadastro esta aguardando aprovacao do administrador.')
+            return redirect('tela_login')
+
         messages.error(request, 'Usuario ou senha invalidos.')
 
     return render(
@@ -257,10 +266,16 @@ def cadastro_usuario(request):
         if primeiro_usuario:
             usuario.is_staff = True
             usuario.is_superuser = True
+        else:
+            usuario.is_active = False
         usuario.save()
-        messages.success(request, 'Usuario cadastrado com sucesso.')
-        login(request, usuario)
-        return redirect('index')
+        if primeiro_usuario:
+            messages.success(request, 'Usuario administrador cadastrado com sucesso.')
+            login(request, usuario)
+            return redirect('index')
+
+        messages.success(request, 'Cadastro enviado com sucesso. O administrador ira avaliar sua liberacao.')
+        return redirect('tela_login')
 
     return render(
         request,
@@ -273,6 +288,48 @@ def cadastro_usuario(request):
 def sair(request):
     logout(request)
     return redirect('tela_login')
+
+
+@require_http_methods(['GET', 'POST'])
+@login_required
+@user_passes_test(_usuario_pode_gerenciar_usuarios, login_url='index')
+def usuarios(request):
+    if request.method == 'POST':
+        usuario = get_object_or_404(User, id=request.POST.get('usuario_id'))
+        acao = request.POST.get('acao')
+
+        if acao == 'aprovar':
+            usuario.is_active = True
+            usuario.save(update_fields=['is_active'])
+            messages.success(request, f'Usuario "{usuario.username}" aprovado com sucesso.')
+        elif acao == 'reprovar':
+            if usuario.is_active:
+                messages.error(request, 'Apenas usuarios pendentes podem ser reprovados.')
+            else:
+                username = usuario.username
+                usuario.delete()
+                messages.success(request, f'Cadastro de "{username}" reprovado.')
+        elif acao == 'bloquear':
+            if usuario == request.user:
+                messages.error(request, 'Voce nao pode bloquear o seu proprio usuario.')
+            else:
+                usuario.is_active = False
+                usuario.save(update_fields=['is_active'])
+                messages.success(request, f'Usuario "{usuario.username}" bloqueado com sucesso.')
+        else:
+            messages.error(request, 'Acao invalida.')
+
+        return redirect('usuarios')
+
+    lista_usuarios = User.objects.order_by('is_active', 'username')
+    return render(
+        request,
+        'financeiro/usuarios.html',
+        {
+            'usuarios': lista_usuarios,
+            'pendentes': lista_usuarios.filter(is_active=False).count(),
+        },
+    )
 
 
 @login_required

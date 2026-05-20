@@ -14,18 +14,20 @@
 <body>
     <main class="login-shell">
         <section class="login-card" aria-labelledby="login-title">
-            <div class="brand">
+            <header class="brand">
                 <div class="brand-mark" aria-hidden="true">
                     <img src="{{ MEDIA_URL }}md21.png" alt="">
                 </div>
                 <h1 class="member-title" id="login-title">Prata</h1>
                 <p class="member-subtitle">Acesso financeiro</p>
-            </div>
+            </header>
 
             {% if messages %}
-                {% for message in messages %}
-                    <div class="messages">{{ message }}</div>
-                {% endfor %}
+                <div class="message-list">
+                    {% for message in messages %}
+                        <p class="messages">{{ message }}</p>
+                    {% endfor %}
+                </div>
             {% endif %}
 
             <form class="login-form" method="post" action="{% url 'tela_login' %}">
@@ -69,11 +71,12 @@
             </form>
 
             <div class="signup">
-                <p>Nao tem usuario cadastrado?</p>
+                <span>Nao tem usuario cadastrado?</span>
                 <a class="create-link" href="{% url 'cadastro_usuario' %}">Criar conta</a>
             </div>
         </section>
     </main>
+
     <script src="{% static 'js/login.js' %}"></script>
 </body>
 </html>

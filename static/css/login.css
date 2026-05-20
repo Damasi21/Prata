@@ -2,9 +2,10 @@
     --gold: #d7a73f;
     --gold-light: #f2c15f;
     --gold-dark: #8e6821;
-    --black: #050505;
-    --white: #f7f2e8;
+    --cream: #f7f2e8;
     --muted: #b9b1a4;
+    --field: #c2c9d4;
+    --ink: #302b25;
 }
 
 * {
@@ -14,28 +15,26 @@
 }
 
 body {
-    align-items: center;
+    min-height: 100vh;
+    color: var(--cream);
+    font-family: "Montserrat", Arial, sans-serif;
     background:
-        radial-gradient(circle at 50% 15%, rgba(215, 167, 63, 0.22), transparent 28%),
+        radial-gradient(circle at 50% 13%, rgba(215, 167, 63, 0.24), transparent 27%),
         linear-gradient(135deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%) 0 0 / 28px 28px,
         linear-gradient(225deg, rgba(255, 255, 255, 0.028) 25%, transparent 25%) 0 0 / 28px 28px,
-        linear-gradient(180deg, #171717 0%, #050505 100%);
-    color: var(--white);
+        linear-gradient(180deg, #181818 0%, #050505 100%);
     display: grid;
-    font-family: "Montserrat", sans-serif;
-    min-height: 100vh;
     overflow-x: hidden;
     padding: 28px 18px;
     place-items: center;
 }
 
 .login-shell {
-    align-items: center;
-    display: flex;
-    justify-content: center;
+    display: grid;
     min-height: 620px;
+    place-items: center;
     position: relative;
-    width: min(100%, 420px);
+    width: min(100%, 430px);
 }
 
 .login-shell::before,
@@ -66,35 +65,35 @@ body {
 .login-card {
     animation: cardIn 700ms ease both;
     background:
-        linear-gradient(160deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
-        rgba(5, 5, 5, 0.78);
-    border: 1px solid rgba(215, 167, 63, 0.32);
+        linear-gradient(155deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
+        rgba(5, 5, 5, 0.82);
+    border: 1px solid rgba(215, 167, 63, 0.34);
     border-radius: 32px;
     box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.62),
+        0 30px 80px rgba(0, 0, 0, 0.64),
         inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    padding: 40px 28px 34px;
+    padding: 40px 30px 34px;
     position: relative;
     width: 100%;
     z-index: 1;
 }
 
 .brand {
-    margin-bottom: 24px;
+    margin-bottom: 26px;
     text-align: center;
 }
 
 .brand-mark {
-    align-items: center;
     background: radial-gradient(circle, rgba(215, 167, 63, 0.18), rgba(0, 0, 0, 0.72));
     border: 3px solid var(--gold);
     border-radius: 50%;
-    box-shadow: 0 0 35px rgba(215, 167, 63, 0.26);
+    box-shadow: 0 0 35px rgba(215, 167, 63, 0.28);
     display: grid;
-    height: 108px;
-    margin: 0 auto 16px;
+    height: 110px;
+    margin: 0 auto 18px;
+    overflow: hidden;
     place-items: center;
-    width: 108px;
+    width: 110px;
 }
 
 .brand-mark img {
@@ -107,35 +106,40 @@ body {
     color: var(--gold-light);
     font-size: 1.35rem;
     font-weight: 800;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.1em;
     line-height: 1;
-    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7);
     text-transform: uppercase;
 }
 
 .member-subtitle {
     color: var(--muted);
     font-size: 0.76rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.13em;
     margin-top: 10px;
     text-transform: uppercase;
+}
+
+.message-list {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 18px;
 }
 
 .messages {
     background: rgba(150, 24, 24, 0.32);
     border: 1px solid rgba(255, 144, 144, 0.25);
-    border-radius: 16px;
+    border-radius: 14px;
     color: #ffe5e5;
     font-size: 0.78rem;
-    margin: 0 0 18px;
-    padding: 12px 14px;
+    padding: 11px 13px;
     text-align: center;
 }
 
 .info-message {
     background: rgba(215, 167, 63, 0.16);
     border-color: rgba(215, 167, 63, 0.32);
-    color: var(--white);
+    color: var(--cream);
+    margin-bottom: 18px;
 }
 
 .errorlist {
@@ -160,79 +164,76 @@ body {
 
 .input-wrap {
     align-items: center;
-    background: rgba(190, 197, 207, 0.94);
-    border: 3px solid var(--white);
+    background: var(--field);
+    border: 3px solid var(--cream);
     border-radius: 999px;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.36);
     display: grid;
-    grid-template-columns: 48px 1fr;
-    min-height: 48px;
+    grid-template-columns: 50px 1fr;
+    min-height: 50px;
     overflow: hidden;
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .input-wrap.password-wrap {
-    grid-template-columns: 48px 1fr 48px;
+    grid-template-columns: 50px 1fr 48px;
 }
 
 .input-wrap:focus-within {
     border-color: var(--gold-light);
-    box-shadow: 0 0 0 4px rgba(215, 167, 63, 0.16), 0 16px 34px rgba(0, 0, 0, 0.42);
+    box-shadow: 0 0 0 4px rgba(215, 167, 63, 0.16), 0 17px 34px rgba(0, 0, 0, 0.42);
     transform: translateY(-1px);
 }
 
 .input-icon {
-    align-items: center;
-    border: 2px solid var(--white);
+    border: 2px solid var(--cream);
     border-radius: 50%;
-    color: #343029;
+    color: #39352f;
     display: grid;
-    height: 38px;
+    height: 40px;
     margin-left: 4px;
     place-items: center;
-    width: 38px;
+    width: 40px;
 }
 
 .input-icon svg {
-    height: 19px;
-    width: 19px;
+    height: 20px;
+    width: 20px;
 }
 
 .input-wrap input {
     appearance: none;
     background: transparent;
     border: 0;
-    border-radius: 0 999px 999px 0;
-    color: #343029;
+    color: var(--ink);
     font: inherit;
     font-size: 0.9rem;
     font-weight: 700;
     height: 100%;
     letter-spacing: 0.04em;
     outline: 0;
-    padding: 0 18px 0 10px;
+    padding: 0 16px 0 10px;
     width: 100%;
+}
+
+.input-wrap input::placeholder {
+    color: rgba(48, 43, 37, 0.7);
 }
 
 .input-wrap input:-webkit-autofill,
 .input-wrap input:-webkit-autofill:hover,
 .input-wrap input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #343029;
-    box-shadow: 0 0 0 1000px rgba(190, 197, 207, 0.94) inset;
-    caret-color: #343029;
+    -webkit-text-fill-color: var(--ink);
+    box-shadow: 0 0 0 1000px var(--field) inset;
+    caret-color: var(--ink);
     transition: background-color 9999s ease-in-out 0s;
 }
 
-.input-wrap input::placeholder {
-    color: rgba(52, 48, 41, 0.72);
-}
-
 .password-toggle {
-    align-items: center;
     background: transparent;
     border: 0;
     border-radius: 50%;
-    color: #343029;
+    color: #39352f;
     cursor: pointer;
     display: grid;
     height: 38px;
@@ -253,19 +254,18 @@ body {
 
 .form-row {
     align-items: center;
-    color: var(--white);
+    color: var(--cream);
     display: flex;
-    font-size: 0.72rem;
-    gap: 14px;
+    font-size: 0.74rem;
     justify-content: space-between;
-    padding: 2px 8px 14px;
+    padding: 2px 8px 12px;
 }
 
 .remember {
     align-items: center;
     cursor: pointer;
     display: inline-flex;
-    gap: 6px;
+    gap: 7px;
     white-space: nowrap;
 }
 
@@ -279,24 +279,54 @@ body {
     background: linear-gradient(180deg, var(--gold-light), var(--gold));
     border: 0;
     border-radius: 999px;
-    box-shadow: 0 16px 30px rgba(215, 167, 63, 0.25);
+    box-shadow: 0 16px 30px rgba(215, 167, 63, 0.28);
     color: #15100a;
     cursor: pointer;
     font: inherit;
     font-weight: 800;
     margin: 12px auto 0;
-    min-height: 48px;
-    transition: transform 180ms ease, box-shadow 180ms ease;
+    min-height: 50px;
+    transition: box-shadow 180ms ease, transform 180ms ease;
     width: 72%;
 }
 
 .login-button:hover {
-    box-shadow: 0 20px 36px rgba(215, 167, 63, 0.34);
+    box-shadow: 0 20px 36px rgba(215, 167, 63, 0.36);
     transform: translateY(-2px);
 }
 
 .login-button:active {
     transform: translateY(0);
+}
+
+.signup {
+    align-items: baseline;
+    color: rgba(247, 242, 232, 0.86);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    gap: 8px;
+    justify-content: center;
+    line-height: 1.35;
+    margin-top: 24px;
+    text-align: center;
+}
+
+.signup p {
+    margin: 0;
+}
+
+.create-link {
+    color: var(--gold-light);
+    font-weight: 800;
+    text-decoration-color: rgba(242, 193, 95, 0.55);
+    text-underline-offset: 4px;
+    transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+
+.create-link:hover {
+    color: var(--cream);
+    text-decoration-color: var(--cream);
 }
 
 @keyframes cardIn {
@@ -326,11 +356,18 @@ body {
     }
 
     .brand-mark {
-        height: 94px;
-        width: 94px;
+        height: 96px;
+        width: 96px;
     }
 
     .login-button {
         width: 100%;
+    }
+
+    .signup {
+        align-items: center;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 22px;
     }
 }
