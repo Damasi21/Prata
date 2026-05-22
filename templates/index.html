@@ -11,7 +11,7 @@
 </div>
 
 <div class="row g-3 mb-4 feature-grid">
-    <div class="col-sm-6 col-lg-4 col-xl">
+    <div class="col-sm-6 col-lg-4">
         <a class="card feature-card text-decoration-none h-100" href="{% url 'importar_ofx' %}">
             <img src="{{ MEDIA_URL }}extrato.png" class="card-img-top feature-card-img" alt="Extrato">
             <div class="card-body">
@@ -20,7 +20,7 @@
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4 col-xl">
+    <div class="col-sm-6 col-lg-4">
         <a class="card feature-card text-decoration-none h-100" href="{% url 'contas_pagar_receber' %}">
             <img src="{{ MEDIA_URL }}contas_a_pagar_e_receber.png" class="card-img-top feature-card-img" alt="Contas a pagar e receber">
             <div class="card-body">
@@ -29,7 +29,7 @@
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4 col-xl">
+    <div class="col-sm-6 col-lg-4">
         <a class="card feature-card text-decoration-none h-100" href="{% url 'importar_excel' %}">
             <img src="{{ MEDIA_URL }}cartao_credito.png" class="card-img-top feature-card-img" alt="Cartao de credito">
             <div class="card-body">
@@ -38,7 +38,7 @@
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4 col-xl">
+    <div class="col-sm-6 col-lg-4">
         <a class="card feature-card text-decoration-none h-100" href="{% url 'fluxo_de_caixa' %}">
             <img src="{{ MEDIA_URL }}fluxo_de_caixa.png" class="card-img-top feature-card-img" alt="Fluxo de caixa">
             <div class="card-body">
@@ -47,12 +47,21 @@
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4 col-xl">
+    <div class="col-sm-6 col-lg-4">
         <a class="card feature-card text-decoration-none h-100" href="{% url 'relatorios_bi' %}">
             <img src="{{ MEDIA_URL }}bi.png" class="card-img-top feature-card-img" alt="Relatorios e B.I">
             <div class="card-body">
                 <h2 class="h6 card-title text-dark">Relatorios e B.I</h2>
                 <p class="card-text text-secondary">Indicadores e analises gerenciais.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <a class="card feature-card text-decoration-none h-100" href="#">
+            <img src="{{ MEDIA_URL }}calendario.png" class="card-img-top feature-card-img" alt="Calendario">
+            <div class="card-body">
+                <h2 class="h6 card-title text-dark">Calendario</h2>
+                <p class="card-text text-secondary">Organize compromissos e datas financeiras.</p>
             </div>
         </a>
     </div>
