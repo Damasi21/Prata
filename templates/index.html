@@ -3,65 +3,52 @@
 {% block title %}Prata - Inicio{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h1 class="h3 mb-1">Painel financeiro</h1>
-        <p class="text-secondary mb-0">Escolha uma area para importar, categorizar e acompanhar seu financeiro.</p>
-    </div>
-</div>
-
-<div class="row g-3 mb-4 feature-grid">
-    <div class="col-sm-6 col-lg-4">
-        <a class="card feature-card text-decoration-none h-100" href="{% url 'importar_ofx' %}">
-            <img src="{{ MEDIA_URL }}extrato.png" class="card-img-top feature-card-img" alt="Extrato">
+<div class="row g-2 mb-4 feature-grid">
+    <div class="col-6 col-lg-4">
+        <a class="card feature-card text-decoration-none" href="{% url 'importar_ofx' %}">
             <div class="card-body">
+                <img src="{{ MEDIA_URL }}extrato.png" class="feature-card-icon" alt="" aria-hidden="true">
                 <h2 class="h6 card-title text-dark">Extrato</h2>
-                <p class="card-text text-secondary">Importe OFX e categorize lancamentos.</p>
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4">
-        <a class="card feature-card text-decoration-none h-100" href="{% url 'contas_pagar_receber' %}">
-            <img src="{{ MEDIA_URL }}contas_a_pagar_e_receber.png" class="card-img-top feature-card-img" alt="Contas a pagar e receber">
+    <div class="col-6 col-lg-4">
+        <a class="card feature-card text-decoration-none" href="{% url 'contas_pagar_receber' %}">
             <div class="card-body">
+                <img src="{{ MEDIA_URL }}contas_a_pagar_e_receber.png" class="feature-card-icon" alt="" aria-hidden="true">
                 <h2 class="h6 card-title text-dark">Pagar e receber</h2>
-                <p class="card-text text-secondary">Cadastre compromissos e conciliacoes.</p>
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4">
-        <a class="card feature-card text-decoration-none h-100" href="{% url 'importar_excel' %}">
-            <img src="{{ MEDIA_URL }}cartao_credito.png" class="card-img-top feature-card-img" alt="Cartao de credito">
+    <div class="col-6 col-lg-4">
+        <a class="card feature-card text-decoration-none" href="{% url 'importar_excel' %}">
             <div class="card-body">
+                <img src="{{ MEDIA_URL }}cartao_credito.png" class="feature-card-icon" alt="" aria-hidden="true">
                 <h2 class="h6 card-title text-dark">Cartao de credito</h2>
-                <p class="card-text text-secondary">Importe o CSV do cartao.</p>
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4">
-        <a class="card feature-card text-decoration-none h-100" href="{% url 'fluxo_de_caixa' %}">
-            <img src="{{ MEDIA_URL }}fluxo_de_caixa.png" class="card-img-top feature-card-img" alt="Fluxo de caixa">
+    <div class="col-6 col-lg-4">
+        <a class="card feature-card text-decoration-none" href="{% url 'fluxo_de_caixa' %}">
             <div class="card-body">
+                <img src="{{ MEDIA_URL }}fluxo_de_caixa.png" class="feature-card-icon" alt="" aria-hidden="true">
                 <h2 class="h6 card-title text-dark">Fluxo de caixa</h2>
-                <p class="card-text text-secondary">Acompanhe entradas e saidas.</p>
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4">
-        <a class="card feature-card text-decoration-none h-100" href="{% url 'relatorios_bi' %}">
-            <img src="{{ MEDIA_URL }}bi.png" class="card-img-top feature-card-img" alt="Relatorios e B.I">
+    <div class="col-6 col-lg-4">
+        <a class="card feature-card text-decoration-none" href="{% url 'relatorios_bi' %}">
             <div class="card-body">
+                <img src="{{ MEDIA_URL }}bi.png" class="feature-card-icon" alt="" aria-hidden="true">
                 <h2 class="h6 card-title text-dark">Relatorios e B.I</h2>
-                <p class="card-text text-secondary">Indicadores e analises gerenciais.</p>
             </div>
         </a>
     </div>
-    <div class="col-sm-6 col-lg-4">
-        <a class="card feature-card text-decoration-none h-100" href="#">
-            <img src="{{ MEDIA_URL }}calendario.png" class="card-img-top feature-card-img" alt="Calendario">
+    <div class="col-6 col-lg-4">
+        <a class="card feature-card text-decoration-none" href="#">
             <div class="card-body">
+                <img src="{{ MEDIA_URL }}calendario.png" class="feature-card-icon" alt="" aria-hidden="true">
                 <h2 class="h6 card-title text-dark">Calendario</h2>
-                <p class="card-text text-secondary">Organize compromissos e datas financeiras.</p>
             </div>
         </a>
     </div>

@@ -26,10 +26,19 @@ document.addEventListener('click', function (event) {
 });
 
 document.addEventListener('input', function (event) {
-    if (event.target.name && event.target.name.includes('-percentual')) {
+    if (event.target.classList.contains('allocation-percent-input')) {
         const list = event.target.closest('.allocation-list');
         const form = event.target.closest('form');
         if (form) form.dataset.partialSaveConfirmed = 'false';
+        syncAllocationRowFromPercent(event.target.closest('.allocation-row'));
+        validateAllocationListForForm(list);
+    }
+
+    if (event.target.classList.contains('allocation-amount-input')) {
+        const list = event.target.closest('.allocation-list');
+        const form = event.target.closest('form');
+        if (form) form.dataset.partialSaveConfirmed = 'false';
+        syncAllocationRowFromAmount(event.target.closest('.allocation-row'));
         validateAllocationListForForm(list);
     }
 });
@@ -88,6 +97,7 @@ document.addEventListener('submit', function (event) {
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.allocation-list').forEach((list) => {
         const form = list.closest('form');
+        list.querySelectorAll('.allocation-row').forEach(syncAllocationRowFromPercent);
         validateAllocationList(list, { allowEmpty: form && form.dataset.allowPartialSave === 'true' });
     });
 
@@ -115,8 +125,8 @@ function validateAllocationList(list, options = {}) {
 
     rows.forEach((row) => {
         const category = row.querySelector('select');
-        const percentage = row.querySelector('input');
-        const percentageValue = parseFloat((percentage.value || '').replace(',', '.'));
+        const percentage = row.querySelector('.allocation-percent-input');
+        const percentageValue = parseDecimalInput(percentage.value);
 
         if (!category.value) {
             return;
@@ -139,6 +149,57 @@ function validateAllocationList(list, options = {}) {
 function validateAllocationListForForm(list) {
     const form = list.closest('form');
     return validateAllocationList(list, { allowEmpty: form && form.dataset.allowPartialSave === 'true' });
+}
+
+function syncAllocationRowFromPercent(row) {
+    if (!row) return;
+    const list = row.closest('.allocation-list');
+    const percentInput = row.querySelector('.allocation-percent-input');
+    const amountInput = row.querySelector('.allocation-amount-input');
+    const total = getAllocationTotal(list);
+    const percent = parseDecimalInput(percentInput.value);
+
+    if (!amountInput || !total || Number.isNaN(percent)) {
+        if (amountInput && !percentInput.value) amountInput.value = '';
+        return;
+    }
+
+    amountInput.value = formatDecimalInput(total * percent / 100);
+}
+
+function syncAllocationRowFromAmount(row) {
+    if (!row) return;
+    const list = row.closest('.allocation-list');
+    const percentInput = row.querySelector('.allocation-percent-input');
+    const amountInput = row.querySelector('.allocation-amount-input');
+    const total = getAllocationTotal(list);
+    const amount = parseDecimalInput(amountInput.value);
+
+    if (!percentInput || !total || Number.isNaN(amount)) {
+        if (percentInput && !amountInput.value) percentInput.value = '';
+        return;
+    }
+
+    percentInput.value = formatDecimalInput(amount / total * 100);
+}
+
+function getAllocationTotal(list) {
+    if (!list) return 0;
+    return parseDecimalInput(list.dataset.lancamentoValor || '0');
+}
+
+function parseDecimalInput(value) {
+    if (!value) return NaN;
+    let normalized = String(value).trim();
+    if (normalized.includes(',')) {
+        normalized = normalized.replace(/\./g, '').replace(',', '.');
+    }
+    return parseFloat(normalized);
+}
+
+function formatDecimalInput(value) {
+    if (!Number.isFinite(value)) return '';
+    return value.toFixed(2).replace('.', ',');
 }
 
 function setupInitialBalancePanel() {

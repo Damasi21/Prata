@@ -37,43 +37,6 @@
 
     <div class="row g-4">
         <div class="col-lg-6">
-            <section class="budget-panel budget-panel-expense">
-                <div class="budget-panel-header">
-                    <h2 class="h5 mb-0">Despesas</h2>
-                    <span>Total de despesas</span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-striped align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Categoria</th>
-                                <th class="text-end">Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for linha in linhas_despesas %}
-                                <tr>
-                                    <td>{{ linha.categoria }}</td>
-                                    <td class="text-end">
-                                        <input class="form-control text-end budget-input" name="budget-{{ linha.categoria.id }}" value="{{ linha.valor }}" placeholder="0.00">
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr><td colspan="2" class="text-secondary">Cadastre categorias de despesa.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>Total de despesas</th>
-                                <th class="text-end budget-total budget-total-expense">R$ {{ total_despesas }}</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </section>
-        </div>
-
-        <div class="col-lg-6">
             <section class="budget-panel budget-panel-income">
                 <div class="budget-panel-header">
                     <h2 class="h5 mb-0">Receitas</h2>
@@ -84,25 +47,82 @@
                         <thead>
                             <tr>
                                 <th>Categoria</th>
-                                <th class="text-end">Valor</th>
+                                <th class="text-end budget-value-col">Budget</th>
+                                <th class="text-end budget-realized-col">Realizado</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for linha in linhas_receitas %}
                                 <tr>
                                     <td>{{ linha.categoria }}</td>
-                                    <td class="text-end">
+                                    <td class="text-end budget-value-col">
                                         <input class="form-control text-end budget-input" name="budget-{{ linha.categoria.id }}" value="{{ linha.valor }}" placeholder="0.00">
+                                    </td>
+                                    <td class="text-end budget-realized budget-realized-col">
+                                        <span class="budget-realized-value">
+                                            {% if linha.estourado %}
+                                                <img src="{{ MEDIA_URL }}aviso.png" class="budget-warning-icon" alt="Budget estourado" title="Budget estourado">
+                                            {% endif %}
+                                            R$ {{ linha.realizado }}
+                                        </span>
                                     </td>
                                 </tr>
                             {% empty %}
-                                <tr><td colspan="2" class="text-secondary">Cadastre categorias de receita.</td></tr>
+                                <tr><td colspan="3" class="text-secondary">Cadastre categorias de receita.</td></tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr>
                                 <th>Total de receitas</th>
-                                <th class="text-end budget-total budget-total-income">R$ {{ total_receitas }}</th>
+                                <th class="text-end budget-total budget-total-income budget-value-col">R$ {{ total_receitas }}</th>
+                                <th class="text-end budget-total budget-total-income budget-realized-col">R$ {{ total_realizado_receitas }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-6">
+            <section class="budget-panel budget-panel-expense">
+                <div class="budget-panel-header">
+                    <h2 class="h5 mb-0">Despesas</h2>
+                    <span>Total de despesas</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th class="text-end budget-value-col">Budget</th>
+                                <th class="text-end budget-realized-col">Realizado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for linha in linhas_despesas %}
+                                <tr>
+                                    <td>{{ linha.categoria }}</td>
+                                    <td class="text-end budget-value-col">
+                                        <input class="form-control text-end budget-input" name="budget-{{ linha.categoria.id }}" value="{{ linha.valor }}" placeholder="0.00">
+                                    </td>
+                                    <td class="text-end budget-realized budget-realized-col">
+                                        <span class="budget-realized-value">
+                                            {% if linha.estourado %}
+                                                <img src="{{ MEDIA_URL }}aviso.png" class="budget-warning-icon" alt="Budget estourado" title="Budget estourado">
+                                            {% endif %}
+                                            R$ {{ linha.realizado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="text-secondary">Cadastre categorias de despesa.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Total de despesas</th>
+                                <th class="text-end budget-total budget-total-expense budget-value-col">R$ {{ total_despesas }}</th>
+                                <th class="text-end budget-total budget-total-expense budget-realized-col">R$ {{ total_realizado_despesas }}</th>
                             </tr>
                         </tfoot>
                     </table>

@@ -371,6 +371,30 @@ class CategorizacaoImportacaoTests(TestCase):
         self.assertRedirects(resposta, reverse('categorizar_ofx_preview'))
         self.assertFalse(Lancamento.objects.exists())
 
+    def test_preview_aceita_rateio_por_valor_e_calcula_percentual(self):
+        self._criar_preview()
+        outra_despesa = Categoria.objects.create(
+            nome='Transporte',
+            tipo=Categoria.DESPESA,
+            pai=self.despesa.pai,
+        )
+
+        resposta = self.client.post(
+            reverse('categorizar_ofx_preview'),
+            {
+                'alloc-1-categoria': [str(self.despesa.id), str(outra_despesa.id)],
+                'alloc-1-valor': ['100,00', '20,00'],
+                'alloc-1-percentual': ['', ''],
+                'alloc-2-categoria': '',
+                'alloc-2-percentual': '100',
+            },
+        )
+
+        self.assertRedirects(resposta, reverse('index'))
+        lancamento = Lancamento.objects.get(descricao='Mercado')
+        percentuais = list(lancamento.rateios.order_by('categoria__nome').values_list('percentual', flat=True))
+        self.assertEqual(percentuais, [Decimal('83.33'), Decimal('16.67')])
+
 
 class RecorrenciaContaTests(TestCase):
     def setUp(self):

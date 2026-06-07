@@ -185,23 +185,39 @@ def _sugestoes_rateio_por_descricao(descricoes, categorias_validas):
     return sugestoes
 
 
-def _rateios_do_post(request, lancamento_id, descricao, categorias_validas, obrigatorio=True):
+def _decimal_do_post(valor, nome_campo, descricao):
+    valor_normalizado = valor.strip()
+    if ',' in valor_normalizado:
+        valor_normalizado = valor_normalizado.replace('.', '').replace(',', '.')
+    try:
+        return Decimal(valor_normalizado)
+    except InvalidOperation:
+        raise ValueError(f'O {nome_campo} do lancamento "{descricao}" nao e valido.')
+
+
+def _rateios_do_post(request, lancamento_id, descricao, categorias_validas, valor_lancamento, obrigatorio=True):
     categorias_ids = request.POST.getlist(f'alloc-{lancamento_id}-categoria')
     percentuais = request.POST.getlist(f'alloc-{lancamento_id}-percentual')
+    valores = request.POST.getlist(f'alloc-{lancamento_id}-valor')
     novos_rateios = []
     total = Decimal('0')
 
-    for categoria_id, percentual in zip(categorias_ids, percentuais):
+    for indice, categoria_id in enumerate(categorias_ids):
+        percentual = percentuais[indice] if indice < len(percentuais) else ''
+        valor_rateio = valores[indice] if indice < len(valores) else ''
         if not categoria_id:
             continue
-        if not percentual:
-            raise ValueError(f'O lancamento "{descricao}" precisa ter categoria e percentual preenchidos.')
         if not categoria_id.isdigit() or int(categoria_id) not in categorias_validas:
             raise ValueError(f'A categoria selecionada para "{descricao}" nao esta ativa.')
-        try:
-            percentual_decimal = Decimal(percentual.replace(',', '.'))
-        except InvalidOperation:
-            raise ValueError(f'O percentual do lancamento "{descricao}" nao e valido.')
+        if percentual:
+            percentual_decimal = _decimal_do_post(percentual, 'percentual', descricao)
+        elif valor_rateio:
+            valor_decimal = _decimal_do_post(valor_rateio, 'valor', descricao)
+            if valor_lancamento <= 0:
+                raise ValueError(f'O valor do lancamento "{descricao}" precisa ser maior que zero para calcular o rateio.')
+            percentual_decimal = (valor_decimal / valor_lancamento * Decimal('100')).quantize(Decimal('0.01'))
+        else:
+            raise ValueError(f'O lancamento "{descricao}" precisa ter categoria e percentual ou valor preenchidos.')
         if percentual_decimal <= 0 or percentual_decimal > 100:
             raise ValueError(f'O percentual do lancamento "{descricao}" deve ser maior que 0 e menor ou igual a 100.')
         total += percentual_decimal
@@ -590,6 +606,7 @@ def categorizar_ofx_preview(request):
                 valor=valor,
                 tipo=item['tipo'],
                 identificador_externo=item['identificador'],
+                valor_absoluto=abs(valor),
                 evento_id=None,
                 categorias=categorias_do_lancamento,
                 rateios=PreviewRateios(rateios_sugeridos) if rateios_sugeridos else EmptyRateios(),
@@ -644,6 +661,7 @@ def categorizar_ofx_preview(request):
                     lancamento_id,
                     item['descricao'],
                     categorias_ids_por_natureza[_natureza_lancamento(Decimal(item['valor']))],
+                    abs(Decimal(item['valor'])),
                     obrigatorio=False,
                 )
             except ValueError as erro:
@@ -774,6 +792,7 @@ def categorizar_importacao(request, importacao_id):
                     lancamento.id,
                     lancamento.descricao,
                     categorias_ids_por_natureza[_natureza_lancamento(lancamento.valor)],
+                    lancamento.valor_absoluto,
                 )
             except ValueError as erro:
                 messages.error(request, str(erro))
@@ -841,11 +860,33 @@ def budgets(request):
         budget.categoria_id: budget.valor
         for budget in Budget.objects.filter(mes=mes, categoria__in=categorias)
     }
-    linhas = [{'categoria': categoria, 'valor': budgets_existentes.get(categoria.id, '')} for categoria in categorias]
+    realizados = {}
+    rateios_realizados = RateioLancamento.objects.filter(
+        lancamento__data__year=mes.year,
+        lancamento__data__month=mes.month,
+        categoria__in=categorias,
+    ).select_related('lancamento', 'categoria')
+    for rateio in rateios_realizados:
+        realizados[rateio.categoria_id] = realizados.get(rateio.categoria_id, Decimal('0')) + abs(rateio.valor_rateado)
+
+    linhas = []
+    for categoria in categorias:
+        valor_budget = budgets_existentes.get(categoria.id, '')
+        valor_realizado = realizados.get(categoria.id, Decimal('0'))
+        linhas.append(
+            {
+                'categoria': categoria,
+                'valor': valor_budget,
+                'realizado': valor_realizado,
+                'estourado': bool(valor_budget != '' and valor_realizado > valor_budget),
+            }
+        )
     linhas_despesas = [linha for linha in linhas if linha['categoria'].tipo == Categoria.DESPESA]
     linhas_receitas = [linha for linha in linhas if linha['categoria'].tipo == Categoria.RECEITA]
     total_despesas = sum((linha['valor'] or Decimal('0')) for linha in linhas_despesas)
     total_receitas = sum((linha['valor'] or Decimal('0')) for linha in linhas_receitas)
+    total_realizado_despesas = sum((linha['realizado'] or Decimal('0')) for linha in linhas_despesas)
+    total_realizado_receitas = sum((linha['realizado'] or Decimal('0')) for linha in linhas_receitas)
     return render(
         request,
         'financeiro/budgets.html',
@@ -858,6 +899,8 @@ def budgets(request):
             'linhas_receitas': linhas_receitas,
             'total_despesas': total_despesas,
             'total_receitas': total_receitas,
+            'total_realizado_despesas': total_realizado_despesas,
+            'total_realizado_receitas': total_realizado_receitas,
             'diferenca_budget': total_receitas - total_despesas,
         },
     )

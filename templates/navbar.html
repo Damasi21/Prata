@@ -1,6 +1,8 @@
-<nav class="navbar navbar-expand-lg bg-dark navbar-dark">
+<nav class="navbar navbar-expand-lg app-navbar">
     <div class="container">
-        <a class="navbar-brand fw-semibold" href="{% url 'index' %}">Prata</a>
+        <a class="navbar-brand app-navbar-brand" href="{% url 'index' %}" aria-label="Prata">
+            <img src="{{ MEDIA_URL }}logo_md21_silver.png" class="navbar-logo" alt="MD21 Silver">
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal">
             <span class="navbar-toggler-icon"></span>
         </button>

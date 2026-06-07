@@ -4,61 +4,75 @@
 
 {% block content %}
 <h1 class="h3 mb-3">Contas a pagar e receber</h1>
-<div class="row g-4">
-    <div class="col-lg-4">
-        <form method="post" class="card card-body">
-            {% csrf_token %}
-            {% if conta_em_edicao %}
-                <input type="hidden" name="conta_id" value="{{ conta_em_edicao.id }}">
-                <div class="alert alert-info py-2">
-                    Editando: {{ conta_em_edicao.descricao }}
-                </div>
-            {% endif %}
-            <div class="mb-3">
+<form method="post" class="card card-body mb-4 payable-form">
+    {% csrf_token %}
+    {% if conta_em_edicao %}
+        <input type="hidden" name="conta_id" value="{{ conta_em_edicao.id }}">
+        <div class="alert alert-info py-2">
+            Editando: {{ conta_em_edicao.descricao }}
+        </div>
+    {% endif %}
+
+    <div class="payable-main-grid">
+        <div>
+            <div>
                 {{ form.categoria.label_tag }}
                 {{ form.categoria }}
                 {{ form.categoria.errors }}
             </div>
-            <div class="mb-3">
+        </div>
+        <div>
+            <div>
                 {{ form.evento.label_tag }}
                 {{ form.evento }}
                 {{ form.evento.errors }}
             </div>
-            <div class="mb-3">
+        </div>
+        <div>
+            <div>
                 {{ form.descricao.label_tag }}
                 {{ form.descricao }}
                 {{ form.descricao.errors }}
             </div>
-            <div class="mb-3">
+        </div>
+        <div>
+            <div>
                 {{ form.vencimento.label_tag }}
                 {{ form.vencimento }}
                 {{ form.vencimento.errors }}
             </div>
-            <div class="mb-3">
+        </div>
+        <div>
+            <div>
                 {{ form.valor.label_tag }}
                 {{ form.valor }}
                 {{ form.valor.errors }}
             </div>
-            <div class="mb-3">
+        </div>
+        <div>
+            <div>
                 {{ form.status.label_tag }}
                 {{ form.status }}
                 {{ form.status.errors }}
             </div>
+        </div>
+    </div>
 
-            {% if not conta_em_edicao %}
-                <hr>
-                <h2 class="h6 mb-3">Recorrencia</h2>
-                <div class="form-check mb-3">
-                    {{ form.criar_recorrencia }}
-                    {{ form.criar_recorrencia.label_tag }}
-                    {{ form.criar_recorrencia.errors }}
+    {% if not conta_em_edicao %}
+        <div class="payable-recurrence mt-3 pt-3">
+            <h2 class="h6 mb-3">Recorrencia</h2>
+            <div class="payable-recurrence-grid">
+                <div class="form-check payable-recurrence-check">
+                        {{ form.criar_recorrencia }}
+                        {{ form.criar_recorrencia.label_tag }}
+                        {{ form.criar_recorrencia.errors }}
                 </div>
-                <div class="mb-3">
+                <div>
                     {{ form.frequencia_recorrencia.label_tag }}
                     {{ form.frequencia_recorrencia }}
                     {{ form.frequencia_recorrencia.errors }}
                 </div>
-                <div class="mb-3">
+                <div>
                     {{ form.quantidade_recorrencia.label_tag }}
                     {{ form.quantidade_recorrencia }}
                     {% if form.quantidade_recorrencia.help_text %}
@@ -66,87 +80,112 @@
                     {% endif %}
                     {{ form.quantidade_recorrencia.errors }}
                 </div>
-            {% elif conta_em_edicao.recorrencia %}
-                <div class="alert alert-secondary py-2">
-                    Esta conta pertence a recorrencia {{ conta_em_edicao.recorrencia.get_frequencia_display }} de {{ conta_em_edicao.recorrencia.quantidade }} contas.
-                </div>
-            {% endif %}
-            <div class="d-flex gap-2">
-                <button class="btn btn-primary" type="submit">
-                    {% if conta_em_edicao %}Atualizar conta{% else %}Salvar conta{% endif %}
-                </button>
-                {% if conta_em_edicao %}
-                    <a class="btn btn-outline-secondary" href="{% url 'contas_pagar_receber' %}">Cancelar</a>
-                {% endif %}
             </div>
-            {% if conta_em_edicao %}
-                <input type="hidden" name="excluir_recorrencia" value="0" data-delete-recurring-input>
-                <button
-                    class="btn btn-outline-danger mt-3"
-                    type="submit"
-                    name="acao"
-                    value="excluir"
-                    formnovalidate
-                    data-has-recorrencia="{% if conta_em_edicao.recorrencia %}1{% else %}0{% endif %}"
-                    onclick="return confirmarExclusaoConta(this);"
-                >
-                    Excluir conta
-                </button>
-            {% endif %}
-        </form>
-    </div>
-    <div class="col-lg-8">
-        <div class="table-responsive">
-            <table class="table table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>Vencimento</th>
-                        <th>Descricao</th>
-                        <th>Natureza</th>
-                        <th>Categoria</th>
-                        <th>Evento</th>
-                        <th class="text-end">Valor</th>
-                        <th>Status</th>
-                        <th>Recorrencia</th>
-                        <th>Conciliacao</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for conta in contas %}
-                        <tr class="{% if conta_em_edicao and conta.id == conta_em_edicao.id %}table-primary{% endif %}"
-                            data-edit-url="{% url 'contas_pagar_receber' %}?editar={{ conta.id }}">
-                            <td>{{ conta.vencimento|date:'d/m/Y' }}</td>
-                            <td>{{ conta.descricao }}</td>
-                            <td>{{ conta.natureza }}</td>
-                            <td>{{ conta.categoria }}</td>
-                            <td>{{ conta.evento.nome|default:'-' }}</td>
-                            <td class="text-end">R$ {{ conta.valor }}</td>
-                            <td>{{ conta.get_status_display }}</td>
-                            <td>
-                                {% if conta.recorrencia %}
-                                    {{ conta.recorrencia.get_frequencia_display }} ({{ conta.recorrencia.quantidade }}x)
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if conta.lancamento_conciliado %}
-                                    {{ conta.lancamento_conciliado.data|date:'d/m/Y' }} - R$ {{ conta.lancamento_conciliado.valor }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="9" class="text-secondary">Nenhuma conta cadastrada.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
+    {% elif conta_em_edicao.recorrencia %}
+        <div class="alert alert-secondary py-2 mt-3">
+            Esta conta pertence a recorrencia {{ conta_em_edicao.recorrencia.get_frequencia_display }} de {{ conta_em_edicao.recorrencia.quantidade }} contas.
+        </div>
+    {% endif %}
+
+    <div class="d-flex gap-2 flex-wrap mt-3">
+        <button class="btn btn-primary" type="submit">
+            {% if conta_em_edicao %}Atualizar conta{% else %}Salvar conta{% endif %}
+        </button>
+        {% if conta_em_edicao %}
+            <a class="btn btn-outline-secondary" href="{% url 'contas_pagar_receber' %}">Cancelar</a>
+        {% endif %}
+        {% if conta_em_edicao %}
+            <input type="hidden" name="excluir_recorrencia" value="0" data-delete-recurring-input>
+            <button
+                class="btn btn-outline-danger"
+                type="submit"
+                name="acao"
+                value="excluir"
+                formnovalidate
+                data-has-recorrencia="{% if conta_em_edicao.recorrencia %}1{% else %}0{% endif %}"
+                onclick="return confirmarExclusaoConta(this);"
+            >
+                Excluir conta
+            </button>
+        {% endif %}
+    </div>
+</form>
+
+<div class="card card-body">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Vencimento</th>
+                    <th>Descricao</th>
+                    <th>Natureza</th>
+                    <th>Categoria</th>
+                    <th>Evento</th>
+                    <th class="text-end">Valor</th>
+                    <th>Status</th>
+                    <th>Recorrencia</th>
+                    <th>Conciliacao</th>
+                    <th class="text-end">Acoes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conta in contas %}
+                    <tr class="{% if conta_em_edicao and conta.id == conta_em_edicao.id %}table-primary{% endif %}"
+                        data-edit-url="{% url 'contas_pagar_receber' %}?editar={{ conta.id }}">
+                        <td>{{ conta.vencimento|date:'d/m/Y' }}</td>
+                        <td>{{ conta.descricao }}</td>
+                        <td>{{ conta.natureza }}</td>
+                        <td>{{ conta.categoria }}</td>
+                        <td>{{ conta.evento.nome|default:'-' }}</td>
+                        <td class="text-end">R$ {{ conta.valor }}</td>
+                        <td>{{ conta.get_status_display }}</td>
+                        <td>
+                            {% if conta.recorrencia %}
+                                {{ conta.recorrencia.get_frequencia_display }} ({{ conta.recorrencia.quantidade }}x)
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if conta.lancamento_conciliado %}
+                                {{ conta.lancamento_conciliado.data|date:'d/m/Y' }} - R$ {{ conta.lancamento_conciliado.valor }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2" data-row-actions>
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'contas_pagar_receber' %}?editar={{ conta.id }}">Editar</a>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="conta_id" value="{{ conta.id }}">
+                                    <input type="hidden" name="acao" value="excluir">
+                                    <input type="hidden" name="excluir_recorrencia" value="0" data-delete-recurring-input>
+                                    <button
+                                        class="btn btn-sm btn-outline-danger"
+                                        type="submit"
+                                        formnovalidate
+                                        data-has-recorrencia="{% if conta.recorrencia %}1{% else %}0{% endif %}"
+                                        onclick="return confirmarExclusaoConta(this);"
+                                    >
+                                        Excluir
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="10" class="text-secondary">Nenhuma conta cadastrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 <script>
-document.addEventListener('dblclick', function (event) {
+document.addEventListener('click', function (event) {
+    if (event.target.closest('[data-row-actions]')) return;
+
     const row = event.target.closest('tr[data-edit-url]');
     if (!row) return;
     window.location.href = row.dataset.editUrl;

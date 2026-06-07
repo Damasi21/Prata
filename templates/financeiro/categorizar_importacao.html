@@ -80,7 +80,7 @@
                             </td>
                         {% endif %}
                         <td>
-                            <div class="allocation-list" data-lancamento="{{ lancamento.id }}">
+                            <div class="allocation-list" data-lancamento="{{ lancamento.id }}" data-lancamento-valor="{{ lancamento.valor_absoluto }}">
                                 {% for rateio in lancamento.rateios.all %}
                                     <div class="row g-2 mb-2 allocation-row">
                                         <div class="allocation-category-col">
@@ -90,6 +90,9 @@
                                                     <option value="{{ categoria.id }}" {% if categoria.id == rateio.categoria_id %}selected{% endif %}>{{ categoria.nome }}</option>
                                                 {% endfor %}
                                             </select>
+                                        </div>
+                                        <div class="allocation-amount-col">
+                                            <input class="form-control allocation-amount-input" name="alloc-{{ lancamento.id }}-valor" placeholder="Valor" inputmode="decimal">
                                         </div>
                                         <div class="allocation-percent-col">
                                             <input class="form-control allocation-percent-input" name="alloc-{{ lancamento.id }}-percentual" value="{{ rateio.percentual }}" placeholder="%">
@@ -110,6 +113,9 @@
                                                 {% endfor %}
                                             </select>
                                         </div>
+                                        <div class="allocation-amount-col">
+                                            <input class="form-control allocation-amount-input" name="alloc-{{ lancamento.id }}-valor" placeholder="Valor" inputmode="decimal">
+                                        </div>
                                         <div class="allocation-percent-col">
                                             <input class="form-control allocation-percent-input" name="alloc-{{ lancamento.id }}-percentual" value="100" placeholder="%">
                                         </div>
@@ -125,7 +131,7 @@
                                 <button class="btn btn-sm btn-outline-secondary add-allocation" type="button">Adicionar categoria</button>
                                 <span class="allocation-warning d-none" role="alert">
                                     <span class="allocation-warning-icon">!</span>
-                                    categoria e 100% obrigatorios
+                                    categoria e rateio 100% obrigatorios
                                 </span>
                             </div>
                         </td>
